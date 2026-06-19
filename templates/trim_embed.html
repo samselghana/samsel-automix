@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en" data-skin="midnight" data-samsel-api-base="" data-trim-embed="1">
+<head>
+  <meta charset="utf-8" />
+  <meta name="samsel-web-build" content="engine-trim-embed" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#12122a" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#667eea" media="(prefers-color-scheme: light)" />
+  <title>SAMSEL Silence trim — Engine</title>
+  <link rel="stylesheet" href="/samsel_web_static/css/skins.css?v=3" />
+  <link rel="stylesheet" href="/samsel_web_static/css/samsel.css?v=3" />
+  <link rel="stylesheet" href="/samsel_web_static/css/camo-btn-stacks.css?v=3" />
+</head>
+<body>
+  <div id="app" class="camo-ui-root">
+    <header class="top">
+      <div class="brand">
+        <div class="spin-logo-wrap" data-tip="brand_logo">
+          <img class="spin-logo" src="/static/logo.ico" alt="" width="36" height="36" decoding="async" />
+        </div>
+        <div>
+          <h1 data-tip="tab_trim">Silence trim</h1>
+          <p class="sub">SAMSEL Web parity — Web Audio + LAME in the browser; same logic as SAMSEL V3 PRO.</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <label class="skin-picker" for="skin-select" data-tip="skin_label"
+          >Skin
+          <select id="skin-select" class="inp-sel skin-select" aria-label="Color theme" data-tip="skin_combo">
+            <option value="midnight">Midnight Indigo</option>
+            <option value="camo">Military Camo</option>
+            <option value="carbon">Carbon Studio</option>
+            <option value="sunset">Sunset Amber</option>
+          </select>
+        </label>
+        <span class="pill" id="conn-pill" data-tip="conn_pill">…</span>
+      </div>
+    </header>
+
+    <p class="hint phone-lan-banner" id="phone-lan-banner" hidden data-tip="phone_lan_banner"></p>
+
+    <main>
+      <p class="hint" style="margin: 0 12px 10px">
+        <strong>Queue</strong>: click a row to select it, then <em>Trim current playlist track → MP3</em>.
+        <strong>Files to trim</strong> is a separate batch queue. Processing runs in your browser (not on the DJ engine server).
+      </p>
+
+      <div class="grid-play">
+        <div class="card drop-zone" id="drop-zone" data-tip="playlist">
+          <p><strong>Playlist</strong> — drag &amp; drop audio or</p>
+          <div class="row-inline file-add-row">
+            <label class="btn-file btn-lbl-gold" data-tip="add_file">
+              Choose files
+              <input type="file" id="file-input" accept=".mp3,.m4a,.aac,.flac,.ogg,.opus,.wav,.webm,.lrc,.txt" multiple />
+            </label>
+            <label class="btn-file btn-lbl-cyan" data-tip="add_folder">
+              Choose folder
+              <input type="file" id="folder-input" webkitdirectory multiple />
+            </label>
+          </div>
+          <p class="hint">The queue lists <strong>audio only</strong>. Add <code>.lrc</code> in the <em>same</em> dialog (Shift+click both types) or use <strong>Choose folder</strong> — paired lyrics show as <span class="lrc-tag">· LRC</span> on the row.</p>
+        </div>
+        <div class="card playlist-card">
+          <div class="playlist-head">
+            <h2>Queue</h2>
+            <div class="playlist-tools">
+              <label class="chk-inline" data-tip="bpm_tag_reorder">
+                <input type="checkbox" id="pl-auto-bpm" /> Auto-order by tag BPM
+              </label>
+              <button type="button" class="btn small btn-lbl-mint" id="btn-pl-sort-bpm" data-tip="bpm_auto_sort">Sort by BPM…</button>
+              <button type="button" class="btn small btn-lbl-rose" id="btn-clear" data-tip="clear_playlist">Clear</button>
+            </div>
+          </div>
+          <ul id="playlist" class="playlist"></ul>
+        </div>
+      </div>
+
+      <div class="card" style="margin: 12px">
+        <h2>Silence trim</h2>
+
+        <div class="trim-intro" data-tip="trim_silence">
+          <h3 class="trim-intro-title">✂️ Silence Trimmer</h3>
+          <p class="hint trim-intro-p"><strong>Remove quiet sections from audio files</strong> — detects silence at the beginning and end, keeps the main content, exports <code>_trimmed.mp3</code> (LAME in the browser). If MP3 encoding is unavailable, falls back to WAV.</p>
+          <p class="hint trim-intro-p"><strong>How to use:</strong> (1) Optional: quick export from the <em>playlist</em> (highlight a row, then use the button below). (2) Add files to the batch queue, set output (folder or downloads). (3) Choose <strong>Auto-detect</strong> (dB + padding + STFT, same idea as V3 PRO) or <strong>Fixed</strong> seconds. (4) Click <strong>Trim</strong>. (5) Read the trim log.</p>
+        </div>
+
+        <div class="trim-subcard">
+          <h3 class="trim-subcard-title">Silence trim (export WAV) — same as SAMSEL Web</h3>
+          <p class="hint">Uses the <strong>current playlist</strong> selection: decode, trim by sample amplitude (first channel), export MP3 (same bitrate as batch trimmer below).</p>
+          <div class="row-inline">
+            <label for="trim-th-linear">Threshold (linear)</label>
+            <input type="number" id="trim-th-linear" min="0.0001" max="0.2" step="0.0001" value="0.01" class="inp-num" data-tip="trim_linear_threshold" />
+          </div>
+          <div class="row-inline">
+            <label for="trim-pad-ms">Pad (ms)</label>
+            <input type="number" id="trim-pad-ms" min="0" max="2000" step="1" value="50" class="inp-num" data-tip="trim_pad_symmetric" />
+          </div>
+          <button type="button" class="btn btn-lbl-mint" id="trim-web-playlist" data-tip="trim_web_export">Trim current playlist track → MP3…</button>
+          <p id="trim-web-msg" class="hint"></p>
+        </div>
+
+        <hr class="trim-sep" />
+
+        <p class="trim-section-label">Batch trimmer (V3 PRO)</p>
+        <div class="row-inline">
+          <label for="trim-mp3-kbps">MP3 bitrate</label>
+          <select id="trim-mp3-kbps" class="inp-sel" data-tip="trim_mp3_bitrate">
+            <option value="128">128 kbps</option>
+            <option value="192" selected>192 kbps</option>
+            <option value="256">256 kbps</option>
+            <option value="320">320 kbps</option>
+          </select>
+        </div>
+        <div class="row-inline trim-method-row">
+          <label for="trim-method">Trim method</label>
+          <select id="trim-method" class="inp-sel" data-tip="trim_method">
+            <option value="auto" selected>Auto (detect)</option>
+            <option value="fixed">Fixed (start/end s)</option>
+          </select>
+        </div>
+
+        <div id="trim-auto-block">
+          <div class="row-inline trim-db-row">
+            <label for="trim-threshold-db">Silence threshold (dB)</label>
+            <input type="number" id="trim-threshold-db" min="-80" max="10" step="1" value="-40" class="inp-num" data-tip="threshold_slider" />
+            <span id="trim-threshold-db-lbl" class="hint trim-db-lbl">−40dB (Normal)</span>
+          </div>
+          <div class="row-inline">
+            <label for="trim-pad-start">Keep at start (ms)</label>
+            <input type="number" id="trim-pad-start" min="0" max="30000" step="10" value="0" class="inp-num" data-tip="trim_pad" />
+            <label for="trim-pad-end">Keep at end (ms)</label>
+            <input type="number" id="trim-pad-end" min="0" max="30000" step="10" value="0" class="inp-num" data-tip="trim_pad" />
+          </div>
+          <div class="row-inline">
+            <label for="trim-frame">Analysis frame</label>
+            <select id="trim-frame" class="inp-sel" data-tip="trim_analysis_frame">
+              <option value="512">512 samples</option>
+              <option value="1024">1024 samples</option>
+              <option value="2048" selected>2048 samples</option>
+              <option value="4096">4096 samples</option>
+            </select>
+            <label for="trim-hop">Hop</label>
+            <select id="trim-hop" class="inp-sel" data-tip="trim_analysis_hop">
+              <option value="128">128 samples</option>
+              <option value="256">256 samples</option>
+              <option value="512" selected>512 samples</option>
+              <option value="1024">1024 samples</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="trim-fixed-block" hidden>
+          <div class="row-inline">
+            <label for="trim-fixed-start">Remove from start (s)</label>
+            <input type="number" id="trim-fixed-start" min="0" max="600" step="0.001" value="0" class="inp-num" data-tip="trim_fixed_start" />
+            <label for="trim-fixed-end">Remove from end (s)</label>
+            <input type="number" id="trim-fixed-end" min="0" max="600" step="0.001" value="0" class="inp-num" data-tip="trim_fixed_end" />
+          </div>
+        </div>
+
+        <div class="row-inline trim-out-row">
+          <label>Output folder</label>
+          <span id="trim-output-label" class="hint trim-output-label">Not set — MP3s download, or use Browse (Chrome / Edge) to write into a folder.</span>
+          <button type="button" class="btn small btn-lbl-cyan" id="trim-browse-dir" data-tip="trim_output_folder">Browse…</button>
+        </div>
+
+        <p class="trim-section-label">Files to trim</p>
+        <ul id="trim-file-list" class="playlist trim-file-list" aria-label="Trim queue"></ul>
+        <input type="file" id="trim-file-input" accept=".mp3,.m4a,.aac,.flac,.ogg,.opus,.wav,.webm,audio/*" multiple hidden />
+
+        <div class="row-inline trim-actions-row">
+          <button type="button" class="btn small btn-lbl-gold" id="trim-add-files" data-tip="add_trim_files">+ Add files</button>
+          <button type="button" class="btn small btn-lbl-amber" id="trim-remove-file">− Remove</button>
+          <button type="button" class="btn small btn-lbl-rose" id="trim-clear-files">Clear</button>
+          <button type="button" class="btn btn-lbl-mint" id="trim-run" data-tip="trim_button">Trim</button>
+        </div>
+
+        <progress id="trim-progress" class="trim-progress" max="100" value="0" hidden></progress>
+        <p id="trim-msg" class="hint"></p>
+        <p class="trim-section-label">Trim log</p>
+        <pre id="trim-log" class="trim-log" data-tip="trim_silence" tabindex="0"></pre>
+      </div>
+    </main>
+
+    <span id="meta" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">—</span>
+
+    <footer class="foot">
+      <span>SAMSEL Web — Trim</span>
+      <span id="status">Ready</span>
+    </footer>
+  </div>
+
+  <div id="samsel-tip" role="tooltip" aria-hidden="true" hidden></div>
+  <script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.5/dist/jsmediatags.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+  <script src="/samsel_web_static/js/tooltips.js?v=3"></script>
+  <script src="/samsel_web_static/js/camo-buttons.js?v=3" defer></script>
+  <script src="/samsel_web_static/js/samsel.js?v=22" defer></script>
+</body>
+</html>

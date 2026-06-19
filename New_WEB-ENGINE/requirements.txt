@@ -1,0 +1,14 @@
+
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart
+numpy
+scipy
+librosa
+soundfile
+sounddevice
+mutagen
+
+# Optional: Queen Mary RNN+DBN beat tracker (used when beat mode = auto)
+# madmom

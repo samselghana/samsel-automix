@@ -1,0 +1,141 @@
+/* Random per-control camo: 7 stacks from /camo/stack_1.png … stack_7.png, or 7 SVG-tile variants.
+   DJ Engine uses button.btn-* (no bare .btn); :is() covers both patterns. */
+
+.camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"]) {
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* Semi-transparent faces so ::before camo shows through (template button styles are earlier in <head>) */
+.camo-ui-root button[class*="btn-"] {
+  background-color: transparent;
+}
+.camo-ui-root button.btn-a {
+  background-image: linear-gradient(180deg, rgba(255, 138, 182, 0.78) 0%, rgba(255, 93, 155, 0.82) 100%);
+}
+.camo-ui-root button.btn-b {
+  background-image: linear-gradient(180deg, rgba(116, 235, 255, 0.78) 0%, rgba(0, 215, 255, 0.82) 100%);
+}
+.camo-ui-root button.btn-success {
+  background-image: linear-gradient(180deg, rgba(197, 255, 158, 0.78) 0%, rgba(142, 255, 107, 0.82) 100%);
+}
+.camo-ui-root button.btn-warn {
+  background-image: linear-gradient(180deg, rgba(255, 217, 129, 0.78) 0%, rgba(255, 193, 69, 0.82) 100%);
+}
+.camo-ui-root button.btn-danger {
+  background-image: linear-gradient(180deg, rgba(255, 152, 152, 0.78) 0%, rgba(255, 104, 104, 0.82) 100%);
+}
+.camo-ui-root button.btn-neutral {
+  color: var(--text);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.06) 14%, transparent 14%), linear-gradient(180deg, rgba(74, 89, 124, 0.72) 0%, rgba(42, 53, 80, 0.78) 100%);
+}
+
+.camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"])::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background-repeat: repeat;
+  background-image: url("../img/camo-tile.svg");
+  transform: translateZ(0);
+}
+
+.camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"])[data-camo-stack="1"]::before {
+  background-size: 182px 127px;
+  background-position: 8% 22%;
+  filter: hue-rotate(0deg) saturate(1.25) contrast(1.08);
+}
+
+.camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"])[data-camo-stack="2"]::before {
+  background-size: 210px 147px;
+  background-position: 72% 64%;
+  filter: hue-rotate(38deg) saturate(1.4) contrast(1.05);
+}
+
+.camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"])[data-camo-stack="3"]::before {
+  background-size: 168px 118px;
+  background-position: 40% 88%;
+  filter: hue-rotate(88deg) saturate(1.15) contrast(1.12);
+}
+
+.camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"])[data-camo-stack="4"]::before {
+  background-size: 228px 160px;
+  background-position: 55% 12%;
+  filter: hue-rotate(142deg) saturate(1.32) contrast(1.06);
+}
+
+.camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"])[data-camo-stack="5"]::before {
+  background-size: 196px 137px;
+  background-position: 20% 48%;
+  filter: hue-rotate(198deg) saturate(1.2) contrast(1.1);
+}
+
+.camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"])[data-camo-stack="6"]::before {
+  background-size: 176px 123px;
+  background-position: 92% 35%;
+  filter: hue-rotate(252deg) saturate(1.38) contrast(1.04);
+}
+
+.camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"])[data-camo-stack="7"]::before {
+  background-size: 204px 143px;
+  background-position: 33% 76%;
+  filter: hue-rotate(308deg) saturate(1.22) contrast(1.09);
+}
+
+html.camo-stack-1-ok .camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"])[data-camo-stack="1"]::before {
+  background-image: var(--camo-bg-1);
+  background-size: cover;
+  background-position: center;
+  filter: saturate(1.08) contrast(1.05);
+}
+
+html.camo-stack-2-ok .camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"])[data-camo-stack="2"]::before {
+  background-image: var(--camo-bg-2);
+  background-size: cover;
+  background-position: center;
+  filter: saturate(1.08) contrast(1.05);
+}
+
+html.camo-stack-3-ok .camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"])[data-camo-stack="3"]::before {
+  background-image: var(--camo-bg-3);
+  background-size: cover;
+  background-position: center;
+  filter: saturate(1.08) contrast(1.05);
+}
+
+html.camo-stack-4-ok .camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"])[data-camo-stack="4"]::before {
+  background-image: var(--camo-bg-4);
+  background-size: cover;
+  background-position: center;
+  filter: saturate(1.08) contrast(1.05);
+}
+
+html.camo-stack-5-ok .camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"])[data-camo-stack="5"]::before {
+  background-image: var(--camo-bg-5);
+  background-size: cover;
+  background-position: center;
+  filter: saturate(1.08) contrast(1.05);
+}
+
+html.camo-stack-6-ok .camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"])[data-camo-stack="6"]::before {
+  background-image: var(--camo-bg-6);
+  background-size: cover;
+  background-position: center;
+  filter: saturate(1.08) contrast(1.05);
+}
+
+html.camo-stack-7-ok .camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"])[data-camo-stack="7"]::before {
+  background-image: var(--camo-bg-7);
+  background-size: cover;
+  background-position: center;
+  filter: saturate(1.08) contrast(1.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .camo-ui-root :is(.btn, .tab, label.btn-file, button[class*="btn-"])::before {
+    filter: none !important;
+  }
+}

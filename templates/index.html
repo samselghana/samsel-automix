@@ -1,0 +1,3919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>SAMSEL DJ Engine Pro</title>
+  <link rel="icon" href="/static/logo.ico" type="image/x-icon" />
+  <style>
+    :root {
+      --bg: #0f1420;
+      --bg-2: #0a0f18;
+      --panel: #1b2335;
+      --panel-2: #232d44;
+      --surface: #2a3550;
+      --surface-hi: #3a4768;
+      --surface-lo: #121827;
+      --text: #eef4ff;
+      --muted: #aebbd5;
+      /* Military camo–aligned accents (sand / olive / drab) */
+      --accent-a: #c4a882;
+      --accent-b: #5f7d52;
+      --accent-c: #7a9a48;
+      --accent-d: #c9b06e;
+      --danger: #a65c42;
+      --ok: #7cb86a;
+      --shadow-deep: 0 14px 28px rgba(0,0,0,.38), 0 6px 12px rgba(0,0,0,.28);
+      --shadow-soft: 0 6px 14px rgba(0,0,0,.24);
+      --inner-hi: inset 1px 1px 0 rgba(255,255,255,.16);
+      --inner-lo: inset -2px -2px 0 rgba(0,0,0,.28);
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html {
+      height: 100%;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      min-height: 100dvh;
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,.06), transparent 22%),
+        linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      padding: clamp(8px, 1.6vmin, 18px);
+      overflow-x: hidden;
+      box-sizing: border-box;
+    }
+
+    .app-shell {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(10px, 1.5vmin, 18px);
+      width: 100%;
+      max-width: min(1680px, 100%);
+      margin: 0 auto;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .app-shell > section {
+      min-width: 0;
+    }
+
+    .footer-grid {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .topbar,
+    .deck-card,
+    .mixer-card,
+    .panel,
+    .status-card,
+    .log-card,
+    .library-card {
+      background: linear-gradient(180deg, var(--panel-2) 0%, var(--panel) 100%);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-deep), var(--inner-hi), var(--inner-lo);
+    }
+
+    .library-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    .library-toolbar .field { min-width: 140px; margin: 0; }
+
+    .library-wrap {
+      margin-top: 12px;
+      max-height: min(420px, 48vh);
+      overflow: auto;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.06);
+      background: linear-gradient(180deg, #111826 0%, #0c111b 100%);
+      box-shadow: inset 3px 3px 8px rgba(0,0,0,.44), inset -1px -1px 0 rgba(255,255,255,.05);
+    }
+
+    .library-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: .68rem;
+      color: var(--text);
+    }
+
+    .library-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      text-align: left;
+      padding: 10px 10px;
+      background: linear-gradient(180deg, #1a2234 0%, #141b2c 100%);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-size: .68rem;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      white-space: nowrap;
+    }
+
+    .library-table tbody td {
+      padding: 9px 10px;
+      border-top: 1px solid rgba(255,255,255,.05);
+      vertical-align: top;
+    }
+
+    .library-table tbody tr {
+      cursor: pointer;
+      transition: background .1s ease;
+    }
+
+    .library-table tbody tr:hover { background: rgba(255,255,255,.06); }
+
+    .library-table tbody tr.on-a { box-shadow: inset 4px 0 0 var(--accent-a); }
+    .library-table tbody tr.on-b { box-shadow: inset 4px 0 0 var(--accent-b); }
+
+    .library-hint {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: .82rem;
+    }
+
+    .modal-library-body {
+      padding-top: 8px;
+    }
+    .modal-library-body .library-card {
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      padding: 0;
+      margin: 0;
+    }
+    .modal-library-body .library-wrap {
+      max-height: min(58vh, 560px);
+    }
+
+    .lyrics-dl-banner {
+      margin: 8px 0 0;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(255, 196, 86, 0.12);
+      border: 1px solid rgba(255, 196, 86, 0.35);
+      color: var(--accent-d);
+      font-size: .78rem;
+    }
+
+    .lib-lrc-btn {
+      font-size: 0.62rem;
+      padding: 4px 8px;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+    }
+
+    .library-table th.lib-col-lrc,
+    .library-table td.lib-col-lrc {
+      width: 1%;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    .lyrics-dl-modal-body .lyrics-dl-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .lyrics-dl-status {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 14px;
+    }
+
+    .lyrics-dl-modal-body .pill.lyrics-dl-pill-ok {
+      background: linear-gradient(180deg, rgba(74, 222, 128, 0.35), rgba(34, 160, 80, 0.45));
+      border-color: rgba(134, 239, 172, 0.45);
+    }
+
+    .lyrics-dl-modal-body .pill.lyrics-dl-pill-warn {
+      background: linear-gradient(180deg, rgba(253, 224, 71, 0.22), rgba(202, 138, 4, 0.35));
+      border-color: rgba(253, 224, 71, 0.4);
+      color: #1a1f2e;
+    }
+
+    .lyrics-dl-modal-body .pill.lyrics-dl-pill-err {
+      background: linear-gradient(180deg, rgba(255, 120, 120, 0.28), rgba(200, 60, 60, 0.4));
+      border-color: rgba(255, 150, 150, 0.45);
+    }
+
+    .lyrics-dl-grid {
+      display: grid;
+      gap: 12px 16px;
+      grid-template-columns: 1fr 1fr;
+      align-items: end;
+    }
+
+    @media (max-width: 900px) {
+      .lyrics-dl-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .lyrics-dl-grid .field-full {
+      grid-column: 1 / -1;
+    }
+
+    .lyrics-dl-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .lyrics-dl-log {
+      grid-column: 1 / -1;
+      margin: 0;
+      max-height: min(200px, 28vh);
+      overflow: auto;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 0.68rem;
+      line-height: 1.45;
+      background: linear-gradient(180deg, #0c1018 0%, #080b12 100%);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .lyrics-dl-modal-body .chk-inline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      color: var(--muted);
+      user-select: none;
+    }
+
+    .downloader-iframe-wrap {
+      padding: 0 !important;
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    #downloaderEmbedFrame,
+    #trimEmbedFrame {
+      width: 100%;
+      flex: 1 1 auto;
+      min-height: min(78vh, 820px);
+      border: 0;
+      display: block;
+      background: #080b12;
+    }
+
+    .lib-title { font-weight: 700; color: var(--text); }
+    .lib-sub { color: var(--muted); font-size: .78rem; }
+
+    .topbar {
+      position: relative;
+      overflow: hidden;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      background:
+        linear-gradient(180deg, rgba(15,22,38,.96), rgba(10,15,24,.98)),
+        radial-gradient(circle at 20% 0%, rgba(255,93,155,.15), transparent 32%),
+        radial-gradient(circle at 80% 0%, rgba(0,215,255,.18), transparent 35%);
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.03),
+        0 22px 40px rgba(0,0,0,.40),
+        inset 0 1px 0 rgba(255,255,255,.08),
+        inset 0 -1px 0 rgba(0,0,0,.35);
+    }
+
+    .topbar-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .chip {
+      padding: 5px 10px;
+      border-radius: 999px;
+      color: var(--text);
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: inset 1px 1px 0 rgba(255,255,255,.1), inset -1px -1px 0 rgba(0,0,0,.2);
+      font-size: .72rem;
+    }
+
+    .chip.ok { color: #07210f; background: linear-gradient(180deg, #b6ffcc, #57d48a); }
+    .chip.warn { color: #251800; background: linear-gradient(180deg, #ffe4a1, #ffbf43); }
+    .chip.err { color: #2a0606; background: linear-gradient(180deg, #ffb1b1, #ff6f6f); }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, min(380px, 34vw)) minmax(0, 1fr);
+      gap: clamp(10px, 1.5vmin, 18px);
+      align-items: start;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .playlist-field-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    select.playlist-select {
+      width: 100%;
+      min-height: 5.5rem;
+      max-height: min(28vh, 220px);
+      overflow-y: auto;
+      font-size: 0.68rem;
+      line-height: 1.35;
+      padding: 5px 7px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      cursor: pointer;
+      scrollbar-gutter: stable;
+    }
+
+    select.playlist-select option {
+      padding: 5px 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .deck-card,
+    .mixer-card,
+    .status-card,
+    .log-card,
+    .library-card {
+      padding: 11px 12px;
+    }
+
+    .deck-header,
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .deck-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      letter-spacing: .04em;
+    }
+
+    .deck-badge {
+      min-width: 40px;
+      text-align: center;
+      padding: 6px 8px;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      color: #1a1f14;
+      box-shadow: 0 8px 0 #252b1e, 0 12px 22px rgba(0,0,0,.32), inset 1px 1px 0 rgba(255,255,255,.2), inset -2px -2px 0 rgba(0,0,0,.28);
+      font-weight: 900;
+    }
+
+    .deck-badge.a { background: linear-gradient(180deg, #e8dcc0 0%, var(--accent-a) 100%); color: #1c1810; }
+    .deck-badge.b { background: linear-gradient(180deg, #8faa78 0%, var(--accent-b) 100%); color: #f2f4ec; }
+
+    .meta-grid,
+    .controls-grid,
+    .upload-grid,
+    .mixer-grid,
+    .footer-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .meta-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: 12px;
+    }
+
+    .stat {
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01)), linear-gradient(180deg, #1a2234 0%, #101726 100%);
+      border: 1px solid rgba(255,255,255,.06);
+      box-shadow: inset 3px 3px 8px rgba(0,0,0,.42), inset -1px -1px 0 rgba(255,255,255,.06), 0 3px 10px rgba(0,0,0,.18);
+    }
+
+    .stat .label { display:block; color: var(--muted); font-size: .62rem; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .08em; }
+    .stat .value { font-weight: 800; font-size: 0.82rem; }
+
+    .wave-shell {
+      padding: 8px 10px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #101827, #0b111b);
+      border: 1px solid rgba(255,255,255,.06);
+      box-shadow: inset 4px 4px 12px rgba(0,0,0,.45), inset -1px -1px 0 rgba(255,255,255,.05);
+      margin-bottom: 12px;
+    }
+
+    canvas.waveform {
+      width: 100%;
+      height: 156px;
+      display: block;
+      border-radius: 12px;
+      background: #000000;
+      cursor: pointer;
+      touch-action: none;
+    }
+
+    canvas.waveform.wave-pan {
+      cursor: grab;
+    }
+
+    canvas.waveform.wave-pan:active {
+      cursor: grabbing;
+    }
+
+    .hint { color: var(--muted); font-size: .68rem; margin-top: 5px; }
+
+    .file-mode-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      margin-bottom: 8px;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .file-mode-row label {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      user-select: none;
+    }
+    .file-mode-row input[type="radio"] {
+      accent-color: var(--accent-a);
+    }
+    #deckBcard .file-mode-row input[type="radio"] {
+      accent-color: var(--accent-b);
+    }
+
+    /* Two real file inputs (single vs multiple): WebView2 ignores dynamic input.multiple toggles. */
+    .deck-file-slot {
+      min-height: 28px;
+    }
+    .deck-file-slot input[type="file"].is-hidden {
+      display: none !important;
+    }
+
+    .controls-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .upload-grid { grid-template-columns: 1fr 1fr; }
+    .mixer-grid { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+
+    button,
+    .btn,
+    input[type="button"],
+    input[type="submit"] {
+      appearance: none;
+      width: 100%;
+      border: 1px solid rgba(40, 48, 32, 0.55);
+      border-radius: 10px;
+      color: #1a1f14;
+      font-weight: 700;
+      font-size: 0.72rem;
+      letter-spacing: .02em;
+      padding: 7px 11px;
+      cursor: pointer;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.18) 0%, rgba(255,255,255,.05) 14%, transparent 14%),
+        linear-gradient(180deg, #8f987c 0%, #5c6550 42%, #3d4434 100%);
+      box-shadow: 0 5px 0 #252b1e, 0 8px 16px rgba(0,0,0,.32), inset 1px 1px 0 rgba(255,255,255,.18), inset -1px -1px 0 rgba(0,0,0,.28);
+      transform: translateY(0);
+      transition: transform .08s ease, box-shadow .08s ease, filter .12s ease;
+    }
+
+    button:hover,
+    .btn:hover,
+    input[type="button"]:hover,
+    input[type="submit"]:hover { filter: brightness(1.05); }
+
+    button:active,
+    .btn:active,
+    input[type="button"]:active,
+    input[type="submit"]:active {
+      transform: translateY(4px);
+      box-shadow: 0 1px 0 #252b1e, 0 4px 10px rgba(0,0,0,.24), inset 1px 1px 0 rgba(255,255,255,.16), inset -1px -1px 0 rgba(0,0,0,.28);
+    }
+
+    button:disabled,
+    .btn:disabled,
+    input:disabled,
+    select:disabled,
+    textarea:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+      filter: grayscale(.18);
+    }
+
+    .btn-a {
+      color: #1c1810;
+      background: linear-gradient(180deg, #e8dcc0 0%, #c4a882 55%, #8f7b55 100%);
+    }
+    .btn-b {
+      color: #f2f4ec;
+      background: linear-gradient(180deg, #8faa78 0%, #5f7d52 50%, #3d5234 100%);
+    }
+    .btn-success {
+      color: #141a0e;
+      background: linear-gradient(180deg, #c8d6a8 0%, #7a9a48 55%, #4d6630 100%);
+    }
+    .btn-warn {
+      color: #1f1a12;
+      background: linear-gradient(180deg, #ede4c4 0%, #c9b06e 55%, #8a7548 100%);
+    }
+    .btn-danger {
+      color: #fff5f0;
+      background: linear-gradient(180deg, #d4a090 0%, #a65c42 55%, #6b3828 100%);
+    }
+    .btn-neutral {
+      color: #e8eadf;
+      background: linear-gradient(180deg, rgba(255,255,255,.08) 0%, transparent 12%),
+        linear-gradient(180deg, #4f5644 0%, #34392e 55%, #23261f 100%);
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="search"],
+    input[type="email"],
+    input[type="password"],
+    input[type="file"],
+    select,
+    textarea {
+      width: 100%;
+      color: var(--text);
+      font-size: 0.78rem;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01)), linear-gradient(180deg, #1a2234 0%, #101726 100%);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      padding: 6px 10px;
+      box-shadow: inset 2px 2px 6px rgba(0,0,0,.4), inset -1px -1px 0 rgba(255,255,255,.06), 0 2px 8px rgba(0,0,0,.16);
+      outline: none;
+      transition: box-shadow .12s ease, border-color .12s ease;
+    }
+
+    input::placeholder,
+    textarea::placeholder { color: #8fa0c0; }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: rgba(122, 154, 98, 0.55);
+      box-shadow: inset 3px 3px 8px rgba(0,0,0,.45), inset -1px -1px 0 rgba(255,255,255,.08), 0 0 0 3px rgba(122, 154, 98, 0.2), 0 8px 18px rgba(0,0,0,.24);
+    }
+
+    input[type="range"] {
+      appearance: none;
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #0c1220 0%, #1d2740 100%);
+      box-shadow: inset 2px 2px 6px rgba(0,0,0,.45), inset -1px -1px 0 rgba(255,255,255,.05);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.18);
+      background: linear-gradient(180deg, #f7fbff 0%, #9fb3d9 100%);
+      box-shadow: 0 3px 0 #44506a, 0 5px 10px rgba(0,0,0,.26), inset 1px 1px 0 rgba(255,255,255,.85);
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 #44506a, 0 3px 6px rgba(0,0,0,.22), inset 1px 1px 0 rgba(255,255,255,.8);
+    }
+
+    .field { display: grid; gap: 5px; }
+    .field label { color: var(--muted); font-weight: 700; font-size: .68rem; letter-spacing: .04em; text-transform: uppercase; }
+    .inline { display: flex; gap: 10px; align-items: center; }
+    .inline > * { flex: 1; }
+
+    .mixer-card .controls-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    /* 10-band EQ — bands stacked vertically (low→high); thin horizontal sliders.
+       Do not max-height + min-height:0 here: flex children would shrink and clip rows.
+       Outer modal scroll handles tall stacks. */
+    .dj-eq-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      align-items: stretch;
+      margin-top: 6px;
+      max-height: none;
+      overflow: visible;
+      padding: 2px 4px 14px 0;
+      scrollbar-width: thin;
+    }
+    .dj-eq-band {
+      display: grid;
+      grid-template-columns: minmax(4.75rem, auto) 1fr minmax(2.85rem, auto);
+      align-items: center;
+      gap: 6px 8px;
+      width: 100%;
+      flex-shrink: 0;
+      min-height: min-content;
+    }
+    .dj-eq-band label {
+      font-size: 0.6rem;
+      line-height: 1.2;
+      text-align: right;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .dj-eq-band .dj-eq-db {
+      font-size: 0.55rem;
+      line-height: 1.15;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+      text-align: left;
+      white-space: nowrap;
+    }
+    .dj-eq-band input[type="range"] {
+      width: 100%;
+      height: 12px;
+      margin: 0;
+      padding: 0;
+      border-radius: 999px;
+      background: transparent;
+      box-shadow: none;
+    }
+    .dj-eq-band input[type="range"]::-webkit-slider-thumb {
+      width: 8px;
+      height: 8px;
+      margin-top: 1px;
+      box-shadow: 0 1px 0 #44506a, 0 2px 4px rgba(0,0,0,.22), inset 1px 1px 0 rgba(255,255,255,.75);
+    }
+    .dj-eq-band input[type="range"]::-webkit-slider-runnable-track {
+      height: 3px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #0c1220 0%, #1d2740 100%);
+      box-shadow: inset 1px 1px 3px rgba(0,0,0,.45), inset -1px -1px 0 rgba(255,255,255,.05);
+    }
+    .dj-eq-band input[type="range"]::-moz-range-track {
+      height: 3px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #0c1220 0%, #1d2740 100%);
+      box-shadow: inset 1px 1px 3px rgba(0,0,0,.45), inset -1px -1px 0 rgba(255,255,255,.05);
+    }
+    .dj-eq-band input[type="range"]::-moz-range-thumb {
+      width: 8px;
+      height: 8px;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 50%;
+      background: linear-gradient(180deg, #f7fbff 0%, #9fb3d9 100%);
+      box-shadow: 0 1px 0 #44506a, 0 2px 4px rgba(0,0,0,.2);
+      cursor: pointer;
+    }
+
+    .crossfader-box,
+    .stream-box,
+    .transport-box,
+    .record-box {
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01)), linear-gradient(180deg, #1a2234 0%, #101726 100%);
+      border: 1px solid rgba(255,255,255,.06);
+      box-shadow: inset 3px 3px 8px rgba(0,0,0,.42), inset -1px -1px 0 rgba(255,255,255,.06), 0 3px 10px rgba(0,0,0,.18);
+    }
+
+    /* Recording: path hint always readable above the green button row */
+    .record-box #recordPath {
+      position: relative;
+      z-index: 1;
+    }
+    .record-path-hint {
+      margin: 8px 0 0;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      line-height: 1.45;
+      color: #e8eee4;
+      background: rgba(15, 22, 18, 0.72);
+      border: 1px solid rgba(180, 200, 160, 0.28);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+    .record-path-hint code {
+      font-size: 0.85em;
+      color: #d4e8c8;
+    }
+
+    .record-result-line {
+      margin-top: 10px;
+      padding: 8px 10px;
+      min-height: 2.4em;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      line-height: 1.4;
+      color: #dce6df;
+      background: rgba(10, 16, 12, 0.55);
+      border: 1px solid rgba(160, 185, 150, 0.22);
+      word-break: break-all;
+    }
+
+    .vertical-wrap {
+      display: grid;
+      place-items: center;
+      padding: 8px 0 18px;
+    }
+
+    .vertical-range {
+      writing-mode: bt-lr;
+      -webkit-appearance: slider-vertical;
+      width: 28px;
+      height: 220px;
+      padding: 0;
+    }
+
+    .status-box,
+    .log-box {
+      min-height: 120px;
+      white-space: pre-wrap;
+      overflow: auto;
+      background: linear-gradient(180deg, #111826 0%, #0c111b 100%);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 12px;
+      box-shadow: inset 2px 2px 6px rgba(0,0,0,.44), inset -1px -1px 0 rgba(255,255,255,.05);
+      padding: 8px 10px;
+      color: #d7e4ff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.72rem;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 5000;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(8px, 2vmin, 20px);
+      box-sizing: border-box;
+      background: rgba(4, 8, 16, 0.78);
+      backdrop-filter: blur(8px);
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-panel {
+      display: flex;
+      flex-direction: column;
+      width: min(640px, 100%);
+      max-height: min(88vh, 920px);
+      background: linear-gradient(180deg, var(--panel-2) 0%, var(--panel) 100%);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 14px;
+      box-shadow: var(--shadow-deep), var(--inner-hi), var(--inner-lo);
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .modal-panel.modal-wide {
+      width: min(900px, 100%);
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      flex-shrink: 0;
+    }
+
+    .modal-head strong {
+      font-size: 0.78rem;
+      letter-spacing: .04em;
+    }
+
+    .modal-head-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .modal-body {
+      flex: 1;
+      min-height: 0;
+      padding: 8px 12px 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-body .status-box,
+    .modal-body .log-box {
+      flex: 1;
+      min-height: min(50vh, 420px);
+      max-height: min(70vh, 560px);
+    }
+
+    .modal-body.lyrics-dl-modal-body {
+      overflow-y: auto;
+      gap: 12px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-body.lyrics-dl-modal-body .lyrics-dl-log {
+      flex: 1 1 auto;
+      min-height: 100px;
+      max-height: min(38vh, 340px);
+    }
+
+    .modal-body.downloader-iframe-wrap {
+      padding: 0;
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #downloaderEmbedFrame,
+    #trimEmbedFrame {
+      width: 100%;
+      flex: 1 1 auto;
+      min-height: min(76vh, 820px);
+      height: min(76vh, 820px);
+      border: 0;
+      display: block;
+      background: #080c14;
+    }
+
+    .btn-inline {
+      width: auto;
+      flex: 0 0 auto;
+      padding: 5px 10px;
+      font-size: 0.65rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 0 #252b1e, 0 6px 12px rgba(0,0,0,.28), inset 1px 1px 0 rgba(255,255,255,.16), inset -1px -1px 0 rgba(0,0,0,.26);
+    }
+
+    .btn-inline:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #252b1e, 0 3px 8px rgba(0,0,0,.22), inset 1px 1px 0 rgba(255,255,255,.12), inset -1px -1px 0 rgba(0,0,0,.26);
+    }
+
+    .topbar-diag {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    /* Desktop pywebview only: solid camo command style (class avoids btn-*). */
+    .samsel-web-desktop-btn {
+      display: none;
+      width: auto;
+      flex: 0 0 auto;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35em;
+      margin: 0;
+      padding: 6px 14px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      border-radius: 10px;
+      border: 2px solid #6b7a58;
+      cursor: pointer;
+      color: #f4f2e8;
+      background: linear-gradient(165deg, #6d7a56 0%, #4a5538 42%, #2a3020 100%);
+      box-shadow:
+        0 3px 0 #1a1e14,
+        0 8px 18px rgba(0, 0, 0, 0.45),
+        inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      -webkit-font-smoothing: antialiased;
+    }
+    .samsel-web-desktop-btn.is-visible {
+      display: inline-flex;
+    }
+    .samsel-web-desktop-btn:hover {
+      border-color: #a3b58f;
+      filter: brightness(1.08);
+    }
+    .samsel-web-desktop-btn:active {
+      transform: translateY(2px);
+      box-shadow:
+        0 1px 0 #1a1e14,
+        0 4px 10px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.14);
+    }
+    .samsel-web-desktop-btn:focus-visible {
+      outline: 2px solid #a3b58f;
+      outline-offset: 2px;
+    }
+
+    .tiny { font-size: .72rem; color: var(--muted); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .hidden { display: none !important; }
+
+    /* Tooltips: native title="" set by initTooltips() — renders above overflow:hidden panels. */
+
+    .row-2 { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+    .row-3 { display: grid; gap: 8px; grid-template-columns: repeat(3, 1fr); }
+    .row-4 { display: grid; gap: 6px; grid-template-columns: repeat(4, 1fr); }
+
+    @media (max-width: 1200px) {
+      .main-grid { grid-template-columns: minmax(0, 1fr); }
+      .mixer-card { order: -1; }
+      .vertical-wrap { grid-auto-flow: column; }
+      .vertical-range {
+        writing-mode: horizontal-tb;
+        -webkit-appearance: none;
+        width: 100%;
+        height: 12px;
+      }
+      .meta-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 720px) {
+      body { padding: 10px; }
+      .topbar, .deck-card, .mixer-card, .status-card, .log-card { padding: 12px; }
+      .controls-grid, .upload-grid, .row-2, .row-3, .row-4, .footer-grid, .mixer-card .controls-grid { grid-template-columns: 1fr 1fr; }
+      .meta-grid { grid-template-columns: 1fr 1fr; }
+      canvas.waveform { height: 128px; }
+    }
+
+    @media (max-width: 520px) {
+      .controls-grid, .upload-grid, .row-2, .row-3, .row-4, .footer-grid, .mixer-card .controls-grid, .meta-grid { grid-template-columns: 1fr; }
+      .topbar { align-items: flex-start; }
+    }
+
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 15% 15%, rgba(255, 93, 155, .16), transparent 22%),
+        radial-gradient(circle at 85% 12%, rgba(0, 215, 255, .18), transparent 24%),
+        radial-gradient(circle at 50% 100%, rgba(142, 255, 107, .08), transparent 30%);
+      mix-blend-mode: screen;
+      z-index: 0;
+    }
+
+    .app-shell { position: relative; z-index: 1; }
+
+    .topbar::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent);
+      transform: translateX(-100%);
+      animation: topbarSweep 10s linear infinite;
+      pointer-events: none;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-logo-wrap {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.08);
+      box-shadow: 0 16px 28px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(0,0,0,.4);
+      isolation: isolate;
+    }
+
+    .brand-logo-wrap::before {
+      content: "";
+      position: absolute;
+      inset: -10px;
+      border-radius: 24px;
+      background: conic-gradient(from 0deg, rgba(255,93,155,.85), rgba(0,215,255,.9), rgba(142,255,107,.75), rgba(255,193,69,.8), rgba(255,93,155,.85));
+      filter: blur(18px);
+      opacity: .55;
+      z-index: -1;
+      animation: logoAura 4.5s linear infinite;
+    }
+
+    .brand-logo {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      object-fit: cover;
+      box-shadow: 0 8px 16px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.18);
+      animation: logoFloat 3.2s ease-in-out infinite, logoSpin 11s linear infinite;
+      transform-style: preserve-3d;
+    }
+
+    .brand-copy h1 {
+      margin: 0;
+      font-size: 1.05rem;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      text-shadow:
+        0 0 10px rgba(255,93,155,.24),
+        0 0 18px rgba(0,215,255,.18);
+    }
+
+    .brand-copy p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: .72rem;
+    }
+
+    .deck-card,
+    .mixer-card,
+    .status-card,
+    .log-card {
+      position: relative;
+      overflow: hidden;
+      border-color: rgba(255,255,255,.07);
+    }
+
+    .deck-card::before,
+    .mixer-card::before,
+    .status-card::before,
+    .log-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(135deg, rgba(255,255,255,.04), transparent 26%, transparent 74%, rgba(255,255,255,.02));
+    }
+
+    #deckAcard {
+      box-shadow: var(--shadow-deep), 0 0 0 1px rgba(255,93,155,.12), 0 0 24px rgba(255,93,155,.12), var(--inner-hi), var(--inner-lo);
+    }
+
+    #deckBcard {
+      box-shadow: var(--shadow-deep), 0 0 0 1px rgba(0,215,255,.12), 0 0 24px rgba(0,215,255,.12), var(--inner-hi), var(--inner-lo);
+    }
+
+    .mixer-card {
+      box-shadow: var(--shadow-deep), 0 0 0 1px rgba(255,193,69,.10), 0 0 28px rgba(255,193,69,.12), var(--inner-hi), var(--inner-lo);
+    }
+
+    .deck-badge.a,
+    .btn-a {
+      box-shadow: 0 8px 0 #3d3424, 0 0 18px rgba(196, 168, 130, 0.35), 0 12px 22px rgba(0,0,0,.32), inset 1px 1px 0 rgba(255,255,255,.22), inset -2px -2px 0 rgba(0,0,0,.28);
+    }
+
+    .deck-badge.b,
+    .btn-b {
+      box-shadow: 0 8px 0 #1e2a18, 0 0 18px rgba(95, 125, 82, 0.38), 0 12px 22px rgba(0,0,0,.32), inset 1px 1px 0 rgba(255,255,255,.22), inset -2px -2px 0 rgba(0,0,0,.28);
+    }
+
+    .btn-success { box-shadow: 0 8px 0 #1e2a14, 0 0 16px rgba(122, 154, 72, 0.28), 0 12px 22px rgba(0,0,0,.32), inset 1px 1px 0 rgba(255,255,255,.22), inset -2px -2px 0 rgba(0,0,0,.28); }
+    .btn-warn { box-shadow: 0 8px 0 #3a3220, 0 0 16px rgba(201, 176, 110, 0.28), 0 12px 22px rgba(0,0,0,.32), inset 1px 1px 0 rgba(255,255,255,.22), inset -2px -2px 0 rgba(0,0,0,.28); }
+    .btn-danger { box-shadow: 0 8px 0 #2a1812, 0 0 16px rgba(166, 92, 66, 0.32), 0 12px 22px rgba(0,0,0,.32), inset 1px 1px 0 rgba(255,255,255,.22), inset -2px -2px 0 rgba(0,0,0,.28); }
+    .btn-neutral { box-shadow: 0 8px 0 #1a1e16, 0 0 10px rgba(180, 190, 160, 0.08), 0 12px 22px rgba(0,0,0,.32), inset 1px 1px 0 rgba(255,255,255,.16), inset -2px -2px 0 rgba(0,0,0,.28); }
+
+    .row-4.hot-cue-row { gap: 5px; align-items: center; }
+    .cue-pair {
+      display: grid;
+      grid-template-columns: auto auto;
+      gap: 4px;
+      justify-content: center;
+      align-items: center;
+      min-width: 0;
+    }
+    button.btn-cue,
+    .btn.btn-cue {
+      --cue-d: 26px;
+      width: var(--cue-d);
+      height: var(--cue-d);
+      min-width: var(--cue-d);
+      min-height: var(--cue-d);
+      max-width: var(--cue-d);
+      max-height: var(--cue-d);
+      padding: 0;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.5rem;
+      letter-spacing: 0;
+      line-height: 1;
+      font-weight: 800;
+    }
+    button.btn-cue.btn-neutral,
+    .btn.btn-cue.btn-neutral {
+      box-shadow: 0 3px 0 #121827, 0 3px 8px rgba(0,0,0,.22), inset 1px 1px 0 rgba(255,255,255,.2), inset -1px -1px 0 rgba(0,0,0,.24);
+    }
+    button.btn-cue.btn-warn,
+    .btn.btn-cue.btn-warn {
+      box-shadow: 0 3px 0 #372508, 0 3px 8px rgba(0,0,0,.22), inset 1px 1px 0 rgba(255,255,255,.2), inset -1px -1px 0 rgba(0,0,0,.24);
+    }
+    button.btn-cue:active,
+    .btn.btn-cue:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #121827, 0 2px 6px rgba(0,0,0,.2), inset 1px 1px 0 rgba(255,255,255,.14), inset -1px -1px 0 rgba(0,0,0,.26);
+    }
+    button.btn-cue.btn-warn:active,
+    .btn.btn-cue.btn-warn:active {
+      box-shadow: 0 1px 0 #372508, 0 2px 6px rgba(0,0,0,.2), inset 1px 1px 0 rgba(255,255,255,.14), inset -1px -1px 0 rgba(0,0,0,.26);
+    }
+
+    .wave-shell {
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 4px 4px 12px rgba(0,0,0,.55), inset -1px -1px 0 rgba(255,255,255,.05), 0 0 0 1px rgba(255,255,255,.04), 0 10px 24px rgba(0,0,0,.24);
+    }
+
+    .wave-shell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), transparent 18%, transparent 82%, rgba(255,255,255,.015));
+      mix-blend-mode: screen;
+    }
+
+    #deckAcard .wave-shell { box-shadow: inset 4px 4px 12px rgba(0,0,0,.55), inset -1px -1px 0 rgba(255,255,255,.05), 0 0 0 1px rgba(255,93,155,.10), 0 0 18px rgba(255,93,155,.10), 0 10px 24px rgba(0,0,0,.24); }
+    #deckBcard .wave-shell { box-shadow: inset 4px 4px 12px rgba(0,0,0,.55), inset -1px -1px 0 rgba(255,255,255,.05), 0 0 0 1px rgba(0,215,255,.10), 0 0 18px rgba(0,215,255,.10), 0 10px 24px rgba(0,0,0,.24); }
+
+    canvas.waveform {
+      background: #000000;
+    }
+
+    .crossfader-box:first-child {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .transport-box {
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* EQ modal: full 10 rows must not be clipped by transport-box overflow */
+    .modal-eq-body .transport-box {
+      overflow: visible;
+    }
+
+    .transport-box::before,
+    .crossfader-box:first-child::before {
+      content: "";
+      position: absolute;
+      inset: -25%;
+      background: radial-gradient(circle at 50% 50%, rgba(255,193,69,.10), transparent 30%), radial-gradient(circle at 20% 50%, rgba(255,93,155,.10), transparent 26%), radial-gradient(circle at 80% 50%, rgba(0,215,255,.12), transparent 26%);
+      animation: pulseGlow 3.4s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    #crossfader {
+      position: relative;
+      background: linear-gradient(90deg, rgba(255,93,155,.42), rgba(255,193,69,.26) 50%, rgba(0,215,255,.42));
+      box-shadow: inset 0 0 10px rgba(0,0,0,.5), 0 0 22px rgba(255,193,69,.10);
+      animation: crossfaderGlow 2.8s ease-in-out infinite;
+    }
+
+    #crossfader::-webkit-slider-runnable-track {
+      height: 12px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(255,93,155,.75), rgba(255,193,69,.45) 50%, rgba(0,215,255,.78));
+      box-shadow: inset 0 0 10px rgba(0,0,0,.55), 0 0 12px rgba(255,193,69,.18);
+    }
+
+    #crossfader::-moz-range-track {
+      height: 12px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(255,93,155,.75), rgba(255,193,69,.45) 50%, rgba(0,215,255,.78));
+      box-shadow: inset 0 0 10px rgba(0,0,0,.55), 0 0 12px rgba(255,193,69,.18);
+    }
+
+    #crossfader::-webkit-slider-thumb,
+    #crossfader::-moz-range-thumb {
+      box-shadow: 0 5px 0 #44506a, 0 0 18px rgba(255,255,255,.24), 0 0 24px rgba(255,193,69,.16), 0 8px 12px rgba(0,0,0,.28), inset 1px 1px 0 rgba(255,255,255,.85);
+    }
+
+    .stat .value,
+    .deck-title,
+    .field label { text-shadow: 0 0 10px rgba(255,255,255,.04); }
+
+    .chip.ok { box-shadow: 0 0 14px rgba(87,212,138,.28), inset 1px 1px 0 rgba(255,255,255,.10); }
+    .chip.warn { box-shadow: 0 0 14px rgba(255,191,67,.24), inset 1px 1px 0 rgba(255,255,255,.10); }
+    .chip.err { box-shadow: 0 0 14px rgba(255,111,111,.24), inset 1px 1px 0 rgba(255,255,255,.10); }
+
+    @keyframes topbarSweep { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+    @keyframes logoSpin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+    @keyframes logoFloat { 0%,100% { translate: 0 0; } 50% { translate: 0 -4px; } }
+    @keyframes logoAura { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes pulseGlow { 0%,100% { opacity: .45; transform: scale(1); } 50% { opacity: .95; transform: scale(1.06); } }
+    @keyframes crossfaderGlow { 0%,100% { box-shadow: inset 0 0 10px rgba(0,0,0,.5), 0 0 14px rgba(255,193,69,.10); } 50% { box-shadow: inset 0 0 10px rgba(0,0,0,.55), 0 0 24px rgba(255,93,155,.16), 0 0 28px rgba(0,215,255,.16); } }
+
+  </style>
+  <link rel="stylesheet" href="/static/css/camo-btn-stacks.css?v=3" />
+</head>
+<body>
+  <div class="app-shell camo-ui-root">
+    <section class="topbar">
+      <div class="brand">
+        <div class="brand-logo-wrap">
+          <img src="/static/logo.ico" alt="SAMSEL logo" class="brand-logo" />
+        </div>
+        <div class="brand-copy">
+          <h1>SAMSEL DJ Engine Pro</h1>
+          <p>Neon club interface with pro deck lighting, animated mixer glow, and mobile-safe streaming.</p>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="chip-row">
+          <div id="chipEngine" class="chip warn">Engine: stopped</div>
+          <div id="chipStream" class="chip warn">Stream: offline</div>
+          <div id="chipAuto" class="chip">Auto DJ: off</div>
+          <div id="chipRec" class="chip">Recording: off</div>
+        </div>
+        <div class="topbar-diag">
+          <button type="button" class="samsel-web-desktop-btn" id="btnSamselWebDesktop" aria-label="Open SAMSEL Web suite window">SAMSEL Web</button>
+          <button type="button" class="btn-neutral btn-inline" id="btnOpenModalJson">Structured status</button>
+          <button type="button" class="btn-neutral btn-inline" id="btnOpenModalLog">Engine log</button>
+          <button type="button" class="btn-neutral btn-inline" id="btnOpenModalLyricsDl">Lyrics downloader</button>
+          <button type="button" class="btn-neutral btn-inline" id="btnOpenModalDownloader">Downloader</button>
+          <button type="button" class="btn-neutral btn-inline" id="btnOpenModalTrim">Trim</button>
+          <button type="button" class="btn-neutral btn-inline" id="btnOpenModalEq">EQ</button>
+          <button type="button" class="btn-neutral btn-inline" id="btnOpenModalJingles">Jingles</button>
+          <button type="button" class="btn-neutral btn-inline" id="btnOpenModalLibrary">Library</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="main-grid">
+      <section class="deck-card" id="deckAcard">
+        <div class="deck-header">
+          <div class="deck-title">
+            <div class="deck-badge a">A</div>
+            <div>
+              <div>DECK A</div>
+              <div class="tiny mono" id="deckAName">No track</div>
+            </div>
+          </div>
+          <button class="btn-a" data-action="reload-deck" data-deck="A">Reload</button>
+        </div>
+
+        <div class="meta-grid">
+          <div class="stat"><span class="label">BPM</span><span class="value" id="deckABpm">--</span></div>
+          <div class="stat"><span class="label">Duration</span><span class="value" id="deckADuration">--</span></div>
+          <div class="stat"><span class="label">Playhead</span><span class="value" id="deckAPlayhead">--</span></div>
+          <div class="stat"><span class="label">State</span><span class="value" id="deckAState">Idle</span></div>
+        </div>
+
+        <div class="wave-shell">
+          <canvas class="waveform" id="waveA"></canvas>
+          <div class="hint">Click seek · Right-click cue · Wheel zoom · Drag pan (when zoomed) · Double-click reset</div>
+        </div>
+
+        <div class="upload-grid">
+          <div class="field">
+            <label>Load file(s) from disk</label>
+            <div class="file-mode-row" role="radiogroup" aria-label="Deck A file load mode">
+              <label><input type="radio" name="fileModeA" value="single" checked /> One track</label>
+              <label><input type="radio" name="fileModeA" value="multi" /> Multiple tracks</label>
+            </div>
+            <div id="deckAFileBrowse" class="deck-file-slot">
+              <input type="file" id="fileA_one" accept=".mp3,.wav,.flac,.ogg,.m4a,.aac,audio/*" />
+              <input type="file" id="fileA_multi" class="is-hidden" multiple accept=".mp3,.wav,.flac,.ogg,.m4a,.aac,audio/*" />
+            </div>
+            <div class="hint">Multiple: use the second browse (after selecting “Multiple tracks”) — Ctrl/Cmd+click or Shift+click in one folder. BPM-sorted playlist.</div>
+          </div>
+          <div class="field">
+            <label>Load whole folder</label>
+            <input type="file" id="folderA" multiple webkitdirectory directory />
+            <div class="hint">Adds every supported audio file in the folder (recursive).</div>
+          </div>
+        </div>
+
+        <div class="controls-grid" style="margin-top:12px;">
+          <button class="btn-success" data-action="play" data-deck="A">Play</button>
+          <button class="btn-danger" data-action="stop" data-deck="A">Stop</button>
+          <button class="btn-neutral" data-action="mute" data-deck="A">Mute</button>
+          <button class="btn-warn" data-action="sync" data-deck="A">Sync</button>
+          <button class="btn-neutral" data-action="unsync" data-deck="A">Unsync</button>
+          <button class="btn-neutral" data-action="align" data-deck="A">Align</button>
+          <button class="btn-neutral" data-action="quantize" data-deck="A">Quantize</button>
+          <button class="btn-neutral" data-action="prev-track" data-deck="A">Prev Track</button>
+          <button class="btn-neutral" data-action="next-track" data-deck="A">Next Track</button>
+        </div>
+
+        <div style="margin-top:10px;">
+          <button type="button" class="btn-neutral" data-action="sort-bpm" data-deck="A">Sort playlist · BPM ↑ (slow → fast)</button>
+        </div>
+
+        <div class="row-2" style="margin-top:12px;">
+          <div class="field">
+            <label>Gain <span id="gainALabel">1.00</span></label>
+            <input type="range" id="gainA" min="0" max="2" step="0.01" value="1" />
+          </div>
+          <div class="field">
+            <label>Seek seconds</label>
+            <div class="inline">
+              <input type="number" id="seekA" min="0" step="0.1" placeholder="0.0" />
+              <button class="btn-neutral" data-action="seek-button" data-deck="A">Seek</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row-3" style="margin-top:12px;">
+          <div class="field">
+            <label>Loop beats</label>
+            <div class="inline">
+              <select id="loopA"><option>1</option><option selected>2</option><option>4</option><option>8</option><option>16</option><option>32</option></select>
+              <button class="btn-neutral" data-action="loop" data-deck="A">Set</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Roll beats</label>
+            <div class="inline">
+              <select id="rollA"><option>1</option><option>2</option><option selected>4</option><option>8</option><option>16</option><option>32</option></select>
+              <button class="btn-neutral" data-action="roll" data-deck="A">Set</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Turn off</label>
+            <div class="inline">
+              <button class="btn-neutral" data-action="loop-off" data-deck="A">Loop Off</button>
+              <button class="btn-neutral" data-action="roll-off" data-deck="A">Roll Off</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row-2" style="margin-top:12px;">
+          <div class="field playlist-field-wrap">
+            <label>Playlist (play order; folder loads auto-sort BPM ↑ — use button to re-sort)</label>
+            <select id="playlistA" class="playlist-select" size="8"></select>
+          </div>
+          <div class="field">
+            <label>Hot Cues</label>
+            <div class="row-4 hot-cue-row" id="cueRowA"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="mixer-card">
+        <div class="section-header">
+          <div class="deck-title">
+            <div class="deck-badge" style="background:linear-gradient(180deg,#c4b896 0%,#6b5f45 100%);color:#f4f2e8;">MX</div>
+            <div>
+              <div>MIXER</div>
+              <div class="tiny">Engine, stream, crossfader, recording</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="controls-grid">
+          <button class="btn-success" id="btnStartEngine">Start Engine</button>
+          <button class="btn-danger" id="btnStopEngine">Stop Engine</button>
+          <button class="btn-success" id="btnAutoOn">Auto DJ On</button>
+          <button class="btn-danger" id="btnAutoOff">Auto DJ Off</button>
+        </div>
+
+        <div style="margin-top:10px;">
+          <button type="button" class="btn-neutral" id="btnSortBpmAll">Sort both playlists · BPM ↑</button>
+        </div>
+
+        <div class="transport-box" style="margin-top:12px;">
+          <div class="field">
+            <label>Crossfader <span id="crossfaderLabel">0.50</span></label>
+            <input type="range" id="crossfader" min="0" max="1" step="0.01" value="0.5" />
+          </div>
+        </div>
+
+        <p class="tiny" style="margin-top:10px;color:var(--muted);">
+          <strong>Engine &amp; stream EQ</strong> and <strong>Connect Stream</strong> are in the <button type="button" class="btn-neutral btn-inline" id="btnOpenModalEqInline" style="margin:0 4px;">EQ</button> panel (top bar).
+        </p>
+
+        <div class="row-2" style="margin-top:12px;">
+          <div class="crossfader-box">
+            <div class="field">
+              <label>Master Gain <span id="masterGainLabel">1.00</span></label>
+              <input type="range" id="masterGain" min="0" max="2" step="0.01" value="1" />
+            </div>
+          </div>
+          <div class="crossfader-box">
+            <div class="field">
+              <label>Drop Sync</label>
+              <div class="inline">
+                <select id="dropIncoming"><option value="A">A</option><option value="B">B</option></select>
+                <button class="btn-warn" id="btnDropSync">Run</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row-2" style="margin-top:12px;">
+          <div class="crossfader-box">
+            <div class="field">
+              <label>Align Manual</label>
+              <div class="inline">
+                <select id="alignSlave"><option value="A">A</option><option value="B">B</option></select>
+                <select id="alignMaster"><option value="B">B</option><option value="A">A</option></select>
+                <button class="btn-neutral" id="btnAlignManual">Align</button>
+              </div>
+            </div>
+          </div>
+          <div class="crossfader-box">
+            <div class="field">
+              <label>Manual Drop</label>
+              <div class="inline">
+                <select id="dropManualIn"><option value="A">A</option><option value="B">B</option></select>
+                <select id="dropManualOut"><option value="B">B</option><option value="A">A</option></select>
+                <button class="btn-warn" id="btnDropManual">Drop</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="tiny" style="margin-top:10px;color:var(--muted);">
+          <strong>Transition jingles</strong> — open the <button type="button" class="btn-neutral btn-inline" id="btnOpenModalJinglesInline" style="margin:0 4px;">Jingles</button> panel (top bar).
+        </p>
+
+        <div class="record-box" style="margin-top:12px;">
+          <div class="field">
+            <label for="recordPath">Record mix to WAV</label>
+            <input
+              type="text"
+              id="recordPath"
+              placeholder="D:\\Mixes\\show.wav — or leave empty"
+              aria-describedby="recordPathHint"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <p class="record-path-hint" id="recordPathHint">
+              <strong>Output path:</strong> type a <strong>full</strong> path ending in <code>.wav</code> (Windows: <code>D:\Mixes\name.wav</code>). If you leave the box <strong>empty</strong>, the server saves a dated file under <code>/recordings</code>. Engine must be running before <strong>Start Recording</strong>.
+            </p>
+            <div class="mono record-result-line" id="recordResult" role="status" aria-live="polite">No recording yet.</div>
+          </div>
+          <div class="row-2" style="margin-top:12px;">
+            <button class="btn-success" id="btnRecStart">Start Recording</button>
+            <button class="btn-danger" id="btnRecStop">Stop Recording</button>
+          </div>
+        </div>
+
+        <div class="status-card" style="margin-top:12px; padding:0; background:none; border:none; box-shadow:none;">
+          <div class="section-header" style="margin:0 0 10px 0;">
+            <div class="tiny">Live status</div>
+            <button class="btn-neutral btn-inline" id="btnRefresh">Refresh Now</button>
+          </div>
+          <div class="status-box" id="statusText">Waiting for status...</div>
+        </div>
+      </section>
+
+      <section class="deck-card" id="deckBcard">
+        <div class="deck-header">
+          <div class="deck-title">
+            <div class="deck-badge b">B</div>
+            <div>
+              <div>DECK B</div>
+              <div class="tiny mono" id="deckBName">No track</div>
+            </div>
+          </div>
+          <button class="btn-b" data-action="reload-deck" data-deck="B">Reload</button>
+        </div>
+
+        <div class="meta-grid">
+          <div class="stat"><span class="label">BPM</span><span class="value" id="deckBBpm">--</span></div>
+          <div class="stat"><span class="label">Duration</span><span class="value" id="deckBDuration">--</span></div>
+          <div class="stat"><span class="label">Playhead</span><span class="value" id="deckBPlayhead">--</span></div>
+          <div class="stat"><span class="label">State</span><span class="value" id="deckBState">Idle</span></div>
+        </div>
+
+        <div class="wave-shell">
+          <canvas class="waveform" id="waveB"></canvas>
+          <div class="hint">Click seek · Right-click cue · Wheel zoom · Drag pan (when zoomed) · Double-click reset</div>
+        </div>
+
+        <div class="upload-grid">
+          <div class="field">
+            <label>Load file(s) from disk</label>
+            <div class="file-mode-row" role="radiogroup" aria-label="Deck B file load mode">
+              <label><input type="radio" name="fileModeB" value="single" checked /> One track</label>
+              <label><input type="radio" name="fileModeB" value="multi" /> Multiple tracks</label>
+            </div>
+            <div id="deckBFileBrowse" class="deck-file-slot">
+              <input type="file" id="fileB_one" accept=".mp3,.wav,.flac,.ogg,.m4a,.aac,audio/*" />
+              <input type="file" id="fileB_multi" class="is-hidden" multiple accept=".mp3,.wav,.flac,.ogg,.m4a,.aac,audio/*" />
+            </div>
+            <div class="hint">Multiple: choose “Multiple tracks” first, then browse — Ctrl/Cmd+click or Shift+click. BPM-sorted playlist.</div>
+          </div>
+          <div class="field">
+            <label>Load whole folder</label>
+            <input type="file" id="folderB" multiple webkitdirectory directory />
+            <div class="hint">Adds every supported audio file in the folder (recursive).</div>
+          </div>
+        </div>
+
+        <div class="controls-grid" style="margin-top:12px;">
+          <button class="btn-success" data-action="play" data-deck="B">Play</button>
+          <button class="btn-danger" data-action="stop" data-deck="B">Stop</button>
+          <button class="btn-neutral" data-action="mute" data-deck="B">Mute</button>
+          <button class="btn-warn" data-action="sync" data-deck="B">Sync</button>
+          <button class="btn-neutral" data-action="unsync" data-deck="B">Unsync</button>
+          <button class="btn-neutral" data-action="align" data-deck="B">Align</button>
+          <button class="btn-neutral" data-action="quantize" data-deck="B">Quantize</button>
+          <button class="btn-neutral" data-action="prev-track" data-deck="B">Prev Track</button>
+          <button class="btn-neutral" data-action="next-track" data-deck="B">Next Track</button>
+        </div>
+
+        <div style="margin-top:10px;">
+          <button type="button" class="btn-neutral" data-action="sort-bpm" data-deck="B">Sort playlist · BPM ↑ (slow → fast)</button>
+        </div>
+
+        <div class="row-2" style="margin-top:12px;">
+          <div class="field">
+            <label>Gain <span id="gainBLabel">1.00</span></label>
+            <input type="range" id="gainB" min="0" max="2" step="0.01" value="1" />
+          </div>
+          <div class="field">
+            <label>Seek seconds</label>
+            <div class="inline">
+              <input type="number" id="seekB" min="0" step="0.1" placeholder="0.0" />
+              <button class="btn-neutral" data-action="seek-button" data-deck="B">Seek</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row-3" style="margin-top:12px;">
+          <div class="field">
+            <label>Loop beats</label>
+            <div class="inline">
+              <select id="loopB"><option>1</option><option selected>2</option><option>4</option><option>8</option><option>16</option><option>32</option></select>
+              <button class="btn-neutral" data-action="loop" data-deck="B">Set</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Roll beats</label>
+            <div class="inline">
+              <select id="rollB"><option>1</option><option>2</option><option selected>4</option><option>8</option><option>16</option><option>32</option></select>
+              <button class="btn-neutral" data-action="roll" data-deck="B">Set</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Turn off</label>
+            <div class="inline">
+              <button class="btn-neutral" data-action="loop-off" data-deck="B">Loop Off</button>
+              <button class="btn-neutral" data-action="roll-off" data-deck="B">Roll Off</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row-2" style="margin-top:12px;">
+          <div class="field playlist-field-wrap">
+            <label>Playlist (play order; folder loads auto-sort BPM ↑ — use button to re-sort)</label>
+            <select id="playlistB" class="playlist-select" size="8"></select>
+          </div>
+          <div class="field">
+            <label>Hot Cues</label>
+            <div class="row-4 hot-cue-row" id="cueRowB"></div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <p class="tiny" style="margin:10px 0 0;color:var(--muted);">
+      <strong>Loaded files (uploads)</strong> — open the <button type="button" class="btn-neutral btn-inline" id="btnOpenModalLibraryInline">Library</button> panel (top bar). Same table: choose deck, click a row to load.
+    </p>
+  </div>
+
+  <div id="modalJsonOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalJsonTitle">
+    <div class="modal-panel modal-wide">
+      <div class="modal-head">
+        <div>
+          <strong id="modalJsonTitle">Structured status</strong>
+          <div class="tiny mono" id="lastUpdate" style="margin-top:3px;">never</div>
+        </div>
+        <button type="button" class="btn-neutral btn-inline" data-close-modal="modalJsonOverlay">Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="status-box" id="jsonStatus">{}</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalLogOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalLogTitle">
+    <div class="modal-panel modal-wide">
+      <div class="modal-head">
+        <strong id="modalLogTitle">Engine log</strong>
+        <div class="modal-head-actions">
+          <button type="button" class="btn-neutral btn-inline" id="btnCopyLog">Copy log</button>
+          <button type="button" class="btn-neutral btn-inline" data-close-modal="modalLogOverlay">Close</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="log-box" id="logText">No logs yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalDownloaderOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalDownloaderTitle">
+    <div class="modal-panel modal-wide" style="width:min(960px,100%);max-height:min(94vh,980px);">
+      <div class="modal-head">
+        <div>
+          <strong id="modalDownloaderTitle">Downloader v2</strong>
+          <div class="tiny" style="margin-top:4px;color:var(--muted);">SAMSEL Web engine in an embedded page — closes with Esc or Close (stops live log polling in the frame).</div>
+        </div>
+        <button type="button" class="btn-neutral btn-inline" data-close-modal="modalDownloaderOverlay">Close</button>
+      </div>
+      <div class="modal-body downloader-iframe-wrap">
+        <iframe id="downloaderEmbedFrame" title="SAMSEL Downloader v2" src="about:blank"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalTrimOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTrimTitle">
+    <div class="modal-panel modal-wide" style="width:min(960px,100%);max-height:min(94vh,980px);">
+      <div class="modal-head">
+        <div>
+          <strong id="modalTrimTitle">Silence trim</strong>
+          <div class="tiny" style="margin-top:4px;color:var(--muted);">SAMSEL Web trim in an embedded page — Close or Esc unloads the frame.</div>
+        </div>
+        <button type="button" class="btn-neutral btn-inline" data-close-modal="modalTrimOverlay">Close</button>
+      </div>
+      <div class="modal-body downloader-iframe-wrap">
+        <iframe id="trimEmbedFrame" title="SAMSEL Silence trim" src="about:blank"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalEqOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalEqTitle">
+    <div class="modal-panel modal-wide" style="width:min(920px,100%);max-height:min(92vh,900px);">
+      <div class="modal-head">
+        <div>
+          <strong id="modalEqTitle">Engine &amp; stream EQ</strong>
+          <div class="tiny" style="margin-top:4px;color:var(--muted);">Same controls as before — moved out of the mixer card. Engine bands post to the server; browser stream EQ applies after you connect the stream.</div>
+        </div>
+        <button type="button" class="btn-neutral btn-inline" data-close-modal="modalEqOverlay">Close</button>
+      </div>
+      <div class="modal-body modal-eq-body" style="overflow:auto;max-height:min(78vh,820px);padding-top:8px;">
+        <div class="transport-box" style="margin-top:0;">
+          <div class="field">
+            <label>Engine output · 10-band EQ <span class="tiny mono">(SAMSEL Web–matched bands)</span></label>
+            <div id="engEqSliders" class="dj-eq-grid" aria-label="Engine ten band equalizer"></div>
+            <div class="tiny" style="margin-top:6px;">
+              Affects the <strong>live mix</strong> from the engine (speakers, optional WebSocket stream, and mix recording): peaking filters −12 to +20 dB, after the crossfader and before Master Gain and transition jingles.
+            </div>
+            <button type="button" class="btn-neutral btn-inline" id="btnEngEqFlat" style="margin-top:8px;">Engine EQ flat (0 dB)</button>
+          </div>
+        </div>
+
+        <div class="transport-box" style="margin-top:14px;">
+          <div class="field">
+            <label>Browser stream · 10-band EQ <span class="tiny mono">(SAMSEL Web–matched bands)</span></label>
+            <div class="field" style="margin:6px 0 10px;">
+              <label for="streamMasterVol">Master <span id="streamMasterVolLbl" class="tiny mono">100%</span></label>
+              <input type="range" id="streamMasterVol" min="0" max="100" step="1" value="100" />
+            </div>
+            <div id="djEqSliders" class="dj-eq-grid" aria-label="Ten band graphic equalizer"></div>
+            <div class="tiny" style="margin-top:6px;">
+              Applies only to the <strong>Connect Stream</strong> preview in this browser (Master 0–100% after EQ; bands 0–8 peaking, rightmost band a high-shelf “Air” near 10 kHz; −12 to +20 dB). It does <strong>not</strong> change deck audio from the engine to your speakers or to recordings; use Connect Stream to hear this EQ.
+            </div>
+            <button type="button" class="btn-neutral btn-inline" id="btnDjEqFlat" style="margin-top:8px;">EQ flat (0 dB)</button>
+          </div>
+        </div>
+
+        <div class="stream-box" style="margin-top:14px;">
+          <div class="field">
+            <label>Mobile-safe browser stream</label>
+            <div class="row-2">
+              <select id="streamFormat">
+                <option value="i16" selected>i16 (recommended)</option>
+                <option value="f32">f32</option>
+              </select>
+              <button class="btn-b" id="btnStreamToggle">Connect Stream</button>
+            </div>
+          </div>
+          <div class="tiny" id="streamInfo">Use i16 for safer phone playback. Tap once to allow audio context.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalJinglesOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalJinglesTitle">
+    <div class="modal-panel modal-wide" style="width:min(720px,100%);max-height:min(92vh,900px);">
+      <div class="modal-head">
+        <div>
+          <strong id="modalJinglesTitle">Transition jingles</strong>
+          <div class="tiny" style="margin-top:4px;color:var(--muted);">Same controls as before — four slots, folder load, play order, enable, and gain.</div>
+        </div>
+        <button type="button" class="btn-neutral btn-inline" data-close-modal="modalJinglesOverlay">Close</button>
+      </div>
+      <div class="modal-body" style="overflow:auto;max-height:min(78vh,820px);padding-top:8px;">
+        <div class="transport-box" style="margin-top:0;">
+          <div class="field">
+            <label>Transition jingles</label>
+            <div class="tiny">Up to four short beds or IDs. Each plays once per <strong>programmed</strong> crossfade (Drop Sync / Manual Drop / Auto DJ). Manual crossfader moves do not trigger them. Use <strong>Play</strong> on a row to fire that slot on the mix anytime (engine running).</div>
+            <div class="field" style="margin-top:8px;">
+              <label>Play order</label>
+              <select id="transitionJingleOrder">
+                <option value="sequential">In slot order (1→4, skip empty)</option>
+                <option value="random">Random among loaded slots</option>
+              </select>
+            </div>
+            <div class="inline" style="margin-top:8px; flex-wrap:wrap; align-items:center; gap:8px;">
+              <button type="button" class="btn-neutral btn-inline" id="btnTransitionJingleFolder">Folder…</button>
+              <span class="tiny">Load from a folder: up to <strong>four</strong> supported audio files are chosen at random to fill the slots (pick <strong>Random</strong> order above for varied transitions).</span>
+            </div>
+            <input type="file" id="transitionJingleFile" accept=".mp3,.wav,.flac,.m4a,.ogg,.aac,audio/*" class="hidden"/>
+            <input type="file" id="transitionJingleFolder" class="hidden" webkitdirectory multiple />
+            <div id="transitionJingleSlots" style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">
+              <div class="inline" style="flex-wrap:wrap; align-items:center; gap:8px;">
+                <span class="tiny" style="min-width:52px;">Slot 1</span>
+                <button type="button" class="btn-neutral btn-inline" data-tj-browse="0">Load…</button>
+                <button type="button" class="btn-success btn-inline" data-tj-play="0">Play</button>
+                <button type="button" class="btn-danger btn-inline" data-tj-clear-slot="0" title="Clear this slot">✕</button>
+                <span class="tiny mono" id="transitionJingleBasename0">— none —</span>
+              </div>
+              <div class="inline" style="flex-wrap:wrap; align-items:center; gap:8px;">
+                <span class="tiny" style="min-width:52px;">Slot 2</span>
+                <button type="button" class="btn-neutral btn-inline" data-tj-browse="1">Load…</button>
+                <button type="button" class="btn-success btn-inline" data-tj-play="1">Play</button>
+                <button type="button" class="btn-danger btn-inline" data-tj-clear-slot="1" title="Clear this slot">✕</button>
+                <span class="tiny mono" id="transitionJingleBasename1">— none —</span>
+              </div>
+              <div class="inline" style="flex-wrap:wrap; align-items:center; gap:8px;">
+                <span class="tiny" style="min-width:52px;">Slot 3</span>
+                <button type="button" class="btn-neutral btn-inline" data-tj-browse="2">Load…</button>
+                <button type="button" class="btn-success btn-inline" data-tj-play="2">Play</button>
+                <button type="button" class="btn-danger btn-inline" data-tj-clear-slot="2" title="Clear this slot">✕</button>
+                <span class="tiny mono" id="transitionJingleBasename2">— none —</span>
+              </div>
+              <div class="inline" style="flex-wrap:wrap; align-items:center; gap:8px;">
+                <span class="tiny" style="min-width:52px;">Slot 4</span>
+                <button type="button" class="btn-neutral btn-inline" data-tj-browse="3">Load…</button>
+                <button type="button" class="btn-success btn-inline" data-tj-play="3">Play</button>
+                <button type="button" class="btn-danger btn-inline" data-tj-clear-slot="3" title="Clear this slot">✕</button>
+                <span class="tiny mono" id="transitionJingleBasename3">— none —</span>
+              </div>
+            </div>
+            <div class="inline" style="margin-top:8px;">
+              <button type="button" class="btn-danger btn-inline" id="btnTransitionJingleClearAll">Clear all jingles</button>
+            </div>
+            <label style="margin-top:10px; display:flex; align-items:center; gap:8px; cursor:pointer;">
+              <input type="checkbox" id="transitionJingleEnabled"/>
+              <span>Play jingle at transitions</span>
+            </label>
+            <div class="field" style="margin-top:8px;">
+              <label>Jingle level <span id="transitionJingleGainLabel">0.65</span></label>
+              <input type="range" id="transitionJingleGain" min="0" max="2" step="0.05" value="0.65"/>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalLibraryOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalLibraryTitle">
+    <div class="modal-panel modal-wide" style="width:min(1240px,100%);max-height:min(94vh,980px);">
+      <div class="modal-head">
+        <div>
+          <strong id="modalLibraryTitle">Loaded files (uploads)</strong>
+          <div class="tiny" style="margin-top:4px;color:var(--muted);">Everything under <span class="mono">uploads/</span> — pick a deck, then click a row. Close or Esc when done.</div>
+        </div>
+        <button type="button" class="btn-neutral btn-inline" data-close-modal="modalLibraryOverlay">Close</button>
+      </div>
+      <div class="modal-body modal-library-body" style="overflow:auto;max-height:min(82vh,900px);">
+        <section class="library-card">
+          <div class="section-header">
+            <div class="deck-title">
+              <div class="deck-badge" style="background:linear-gradient(180deg,#9aab7a 0%,#4d5a38 100%);color:#f4f2e8;">LIB</div>
+              <div>
+                <div>LOADED FILES (UPLOADS)</div>
+                <div class="tiny">Every audio file under <span class="mono">uploads/</span> — pick a deck, then click a row to load and play</div>
+              </div>
+            </div>
+            <div class="library-toolbar">
+              <div class="field">
+                <label>Play on deck</label>
+                <select id="libraryTargetDeck">
+                  <option value="A">Deck A</option>
+                  <option value="B">Deck B</option>
+                </select>
+              </div>
+              <button type="button" class="btn-neutral btn-inline" id="btnLibraryRefresh">Refresh list</button>
+            </div>
+          </div>
+          <div class="library-wrap">
+            <table class="library-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Artist</th>
+                  <th>Album</th>
+                  <th>Time</th>
+                  <th>BPM</th>
+                  <th>SR</th>
+                  <th>Ch</th>
+                  <th>Bits</th>
+                  <th>Bitrate</th>
+                  <th>Fmt</th>
+                  <th>Size</th>
+                  <th>Modified</th>
+                  <th>Disc</th>
+                  <th>Trk</th>
+                  <th>Genre</th>
+                  <th>Year</th>
+                  <th>Composer</th>
+                  <th>Filename</th>
+                  <th class="lib-col-lrc">LRC</th>
+                </tr>
+              </thead>
+              <tbody id="libraryTableBody"></tbody>
+            </table>
+          </div>
+          <p class="library-hint" id="libraryHint">Loading library…</p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalLyricsDlOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="lyricsDlHeading">
+    <div class="modal-panel modal-wide">
+      <div class="modal-head">
+        <div>
+          <strong id="lyricsDlHeading">Lyrics downloader</strong>
+          <div class="tiny" style="margin-top:4px;max-width:min(720px,100%);">
+            Synced <span class="mono">.lrc</span> next to tracks under <span class="mono">uploads/</span> — same <strong>syncedlyrics</strong> / lrclib flow as SAMSEL Web’s Downloader
+          </div>
+        </div>
+        <button type="button" class="btn-neutral btn-inline" data-close-modal="modalLyricsDlOverlay">Close</button>
+      </div>
+      <div class="modal-body lyrics-dl-modal-body">
+        <div class="lyrics-dl-head">
+          <div class="lyrics-dl-status" style="width:100%;justify-content:flex-start;">
+            <span id="lyricsDlPill" class="pill lyrics-dl-pill-warn" role="status">Checking…</span>
+            <span id="lyricsDlSubline" class="tiny" style="color:var(--muted);max-width:min(520px,100%);"></span>
+          </div>
+        </div>
+        <p class="lyrics-dl-banner" id="lyricsDlAlert" hidden role="alert"></p>
+        <div class="lyrics-dl-grid">
+          <div class="field field-full">
+            <label for="lyricsDlSelect">Library file (uploads)</label>
+            <select id="lyricsDlSelect" style="width:100%;max-width:100%;">
+              <option value="">— Refresh library list first —</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="lyricsDlQueryOverride">Search override (optional)</label>
+            <input type="text" id="lyricsDlQueryOverride" style="width:100%;" placeholder="Artist - Title (overrides tag/filename search)" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label class="chk-inline">
+              <input type="checkbox" id="lyricsDlOverwrite" />
+              Overwrite existing <span class="mono">.lrc</span>
+            </label>
+          </div>
+          <div class="field field-full lyrics-dl-actions">
+            <button type="button" class="btn-neutral btn-inline" id="btnLyricsDlFetchSelected">Fetch for selection</button>
+            <button type="button" class="btn-a btn-inline" id="btnLyricsDlFetchDeckA">Deck A</button>
+            <button type="button" class="btn-b btn-inline" id="btnLyricsDlFetchDeckB">Deck B</button>
+            <button type="button" class="btn-neutral btn-inline" id="btnLyricsDlFetchAll">Fetch all in library table</button>
+          </div>
+          <pre id="lyricsDlLog" class="lyrics-dl-log" aria-label="Lyrics downloader log" tabindex="0"></pre>
+        </div>
+        <p class="tiny" style="margin:0;color:var(--muted);">Deck A/B only when that deck’s file is under <span class="mono">uploads/</span>. Use the top-bar <strong>Library</strong> panel for the uploads table and per-row <span class="mono">.lrc</span> actions.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      status: null,
+      ws: null,
+      audioCtx: null,
+      scriptNode: null,
+      gainNode: null,
+      eqFilters: null,
+      streamQueue: [],
+      streamMeta: { sr: 48000, channels: 2, format: 'i16' },
+      maxQueueFrames: 180,
+      pollTimer: null,
+      streamConnected: false,
+      tjUploadSlot: 0,
+      /** Last ``/api/lyrics_downloader/status`` (SAMSEL Web–style lrclib fetch). */
+      lyricsDl: null,
+    };
+
+    /** Per-deck waveform viewport: show track fraction [viewStart, viewStart + viewWidth] (0–1). */
+    const waveView = {
+      A: { viewStart: 0, viewWidth: 1, lastWaveLen: 0 },
+      B: { viewStart: 0, viewWidth: 1, lastWaveLen: 0 },
+    };
+    const WAVE_ZOOM_MIN = 0.04;
+    const WAVE_ZOOM_FACTOR = 1.12;
+
+    let waveDrag = null;
+    let engEqPostTimer = null;
+
+    const $ = (id) => document.getElementById(id);
+    const fmt = (n, digits = 2) => (Number.isFinite(Number(n)) ? Number(n).toFixed(digits) : '--');
+    const clamp = (x, min, max) => Math.min(max, Math.max(min, x));
+    const timeFmt = (sec) => {
+      sec = Number(sec);
+      if (!Number.isFinite(sec)) return '--';
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${m}:${String(s).padStart(2, '0')}`;
+    };
+
+    /** Log-spaced 30 Hz–18 kHz, 10 bands — same formula as SAMSEL Web `samsel.js`. */
+    const DJ_EQ_BAND_HZ = (() => {
+      const lo = Math.log10(30);
+      const hi = Math.log10(18000);
+      const arr = [];
+      for (let i = 0; i < 10; i++) {
+        const t = i / 9;
+        arr.push(Math.round(10 ** (lo + t * (hi - lo)) * 100) / 100);
+      }
+      return arr;
+    })();
+    const DJ_EQ_MIN = -12;
+    const DJ_EQ_MAX = 20;
+    const DJ_STREAM_HIGHSHELF_HZ = 10000;
+    const DJ_STREAM_HIGHSHELF_FMAX_FRAC_SR = 0.22;
+
+    function hzLabelDj(hz) {
+      return hz >= 1000 ? `${(hz / 1000).toFixed(hz >= 10000 ? 0 : 1)} kHz` : `${Math.round(hz)} Hz`;
+    }
+
+    function applyDjEq() {
+      if (!state.eqFilters || !state.eqFilters.length) return;
+      const ac = state.audioCtx;
+      const t = ac ? ac.currentTime : 0;
+      for (let i = 0; i < 10; i++) {
+        const sl = $(`dj-eq-${i}`);
+        if (!sl || !state.eqFilters[i]) continue;
+        let v = parseFloat(sl.value);
+        if (!Number.isFinite(v)) v = 0;
+        v = Math.max(DJ_EQ_MIN, Math.min(DJ_EQ_MAX, v));
+        const g = state.eqFilters[i].gain;
+        if (ac && g && typeof g.setValueAtTime === 'function') {
+          try {
+            g.cancelScheduledValues(t);
+            g.setValueAtTime(v, t);
+          } catch (_) {
+            g.value = v;
+          }
+        } else if (g) {
+          g.value = v;
+        }
+      }
+    }
+
+    /** 0–100% linear gain after EQ, same semantics as SAMSEL Web Master (`#vol`). */
+    function syncStreamMasterToGain() {
+      const sl = $('streamMasterVol');
+      const lbl = $('streamMasterVolLbl');
+      if (!sl) return;
+      let n = parseInt(sl.value, 10);
+      if (!Number.isFinite(n)) n = 100;
+      n = Math.max(0, Math.min(100, n));
+      sl.value = String(n);
+      if (lbl) lbl.textContent = `${n}%`;
+      if (state.gainNode && state.audioCtx) {
+        const lin = n / 100;
+        const t = state.audioCtx.currentTime;
+        const g = state.gainNode.gain;
+        try {
+          g.cancelScheduledValues(t);
+          g.setValueAtTime(lin, t);
+        } catch (_) {
+          g.value = lin;
+        }
+      }
+    }
+
+    function updateDjEqLabels() {
+      for (let i = 0; i < 10; i++) {
+        const sl = $(`dj-eq-${i}`);
+        const db = $(`dj-eq-db-${i}`);
+        if (sl && db) {
+          const v = parseInt(sl.value, 10);
+          db.textContent = `${v >= 0 ? '+' : ''}${v} dB`;
+        }
+      }
+    }
+
+    function buildDjEqSliders() {
+      const host = $('djEqSliders');
+      if (!host) return;
+      host.innerHTML = '';
+      for (let i = 0; i < 10; i++) {
+        const w = document.createElement('div');
+        w.className = 'dj-eq-band';
+        const lab = document.createElement('label');
+        lab.htmlFor = `dj-eq-${i}`;
+        lab.textContent = hzLabelDj(DJ_EQ_BAND_HZ[i]);
+        const rng = document.createElement('input');
+        rng.type = 'range';
+        rng.id = `dj-eq-${i}`;
+        rng.min = String(DJ_EQ_MIN);
+        rng.max = String(DJ_EQ_MAX);
+        rng.value = '0';
+        rng.step = '1';
+        const db = document.createElement('span');
+        db.className = 'dj-eq-db';
+        db.id = `dj-eq-db-${i}`;
+        db.textContent = '0 dB';
+        rng.addEventListener('input', () => {
+          if (state.audioCtx && state.audioCtx.state === 'suspended') state.audioCtx.resume().catch(() => {});
+          applyDjEq();
+          updateDjEqLabels();
+        });
+        w.appendChild(lab);
+        w.appendChild(rng);
+        w.appendChild(db);
+        host.appendChild(w);
+      }
+    }
+
+    function scheduleEngEqPost() {
+      if (engEqPostTimer) clearTimeout(engEqPostTimer);
+      engEqPostTimer = setTimeout(async () => {
+        engEqPostTimer = null;
+        const bands = [];
+        for (let i = 0; i < 10; i++) {
+          const sl = $(`eng-eq-${i}`);
+          bands.push(sl ? parseFloat(sl.value) : 0);
+        }
+        try {
+          await postJson('/engine_eq', { bands });
+        } catch (_) {}
+      }, 90);
+    }
+
+    function updateEngEqLabels() {
+      for (let i = 0; i < 10; i++) {
+        const sl = $(`eng-eq-${i}`);
+        const db = $(`eng-eq-db-${i}`);
+        if (sl && db) {
+          const v = parseInt(sl.value, 10);
+          db.textContent = `${v >= 0 ? '+' : ''}${v} dB`;
+        }
+      }
+    }
+
+    function buildEngEqSliders() {
+      const host = $('engEqSliders');
+      if (!host) return;
+      host.innerHTML = '';
+      for (let i = 0; i < 10; i++) {
+        const w = document.createElement('div');
+        w.className = 'dj-eq-band';
+        const lab = document.createElement('label');
+        lab.htmlFor = `eng-eq-${i}`;
+        lab.textContent = hzLabelDj(DJ_EQ_BAND_HZ[i]);
+        const rng = document.createElement('input');
+        rng.type = 'range';
+        rng.id = `eng-eq-${i}`;
+        rng.min = String(DJ_EQ_MIN);
+        rng.max = String(DJ_EQ_MAX);
+        rng.value = '0';
+        rng.step = '1';
+        const db = document.createElement('span');
+        db.className = 'dj-eq-db';
+        db.id = `eng-eq-db-${i}`;
+        db.textContent = '0 dB';
+        rng.addEventListener('input', () => {
+          updateEngEqLabels();
+          scheduleEngEqPost();
+        });
+        w.appendChild(lab);
+        w.appendChild(rng);
+        w.appendChild(db);
+        host.appendChild(w);
+      }
+    }
+
+    function syncEngEqFromStatus(data) {
+      const bands = data.engine_eq_db;
+      if (!Array.isArray(bands) || bands.length !== 10) return;
+      for (let i = 0; i < 10; i++) {
+        const sl = $(`eng-eq-${i}`);
+        if (!sl || document.activeElement === sl) continue;
+        const w = String(Math.round(Number(bands[i])));
+        if (sl.value !== w) sl.value = w;
+      }
+      updateEngEqLabels();
+    }
+
+    function setChip(id, text, mode = '') {
+      const el = $(id);
+      el.textContent = text;
+      el.className = 'chip' + (mode ? ` ${mode}` : '');
+    }
+
+    function apiUrl(path) {
+      if (typeof path !== 'string') return path;
+      if (/^https?:\/\//i.test(path)) return path;
+      const proto = window.location.protocol;
+      if (proto === 'http:' || proto === 'https:') {
+        return window.location.origin + (path.startsWith('/') ? path : `/${path}`);
+      }
+      return path;
+    }
+
+    async function api(path, options = {}) {
+      const url = apiUrl(path);
+      let resp;
+      try {
+        resp = await fetch(url, options);
+      } catch (err) {
+        const isLocalhost = window.location.hostname === 'localhost';
+        const port = window.location.port || '8000';
+        const v4Hint = isLocalhost
+          ? ` Try http://127.0.0.1:${port}/ instead of "localhost" (Windows often resolves localhost to IPv6 first).`
+          : '';
+        const fileHint = window.location.protocol === 'file:'
+          ? ' Use the app from the server URL (run python app.py or desktop_app.py), not an HTML file opened from disk.'
+          : '';
+        const msg = (err && err.message) ? err.message : 'Network error';
+        throw new Error(`${msg}. Is the DJ server still running?${v4Hint}${fileHint}`);
+      }
+      const contentType = resp.headers.get('content-type') || '';
+      let data;
+      if (contentType.includes('application/json')) data = await resp.json();
+      else data = await resp.text();
+      if (!resp.ok) {
+        const msg = typeof data === 'string' ? data : (data.detail || data.error || JSON.stringify(data));
+        throw new Error(msg || `HTTP ${resp.status}`);
+      }
+      return data;
+    }
+
+    function formBody(obj) {
+      const fd = new FormData();
+      for (const [k, v] of Object.entries(obj)) fd.append(k, v);
+      return fd;
+    }
+
+    async function post(path, form = null) {
+      const options = { method: 'POST' };
+      if (form instanceof FormData) options.body = form;
+      else if (form && typeof form === 'object') options.body = formBody(form);
+      return api(path, options);
+    }
+
+    async function postJson(path, obj) {
+      return api(path, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(obj),
+      });
+    }
+
+    function dash(v) {
+      if (v == null || v === '') return '—';
+      return String(v);
+    }
+
+    function formatBytes(n) {
+      n = Number(n);
+      if (!Number.isFinite(n) || n < 0) return '—';
+      const u = ['B', 'KB', 'MB', 'GB'];
+      let i = 0;
+      let x = n;
+      while (x >= 1024 && i < u.length - 1) {
+        x /= 1024;
+        i += 1;
+      }
+      const rounded = i === 0 ? x : (x < 10 ? x.toFixed(1) : Math.round(x));
+      return `${rounded} ${u[i]}`;
+    }
+
+    function displayTrackTitle(m) {
+      const t = (m.title || '').trim();
+      return t || m.basename || '—';
+    }
+
+    const LYRICS_DL_LOG_MAX_LINES = 48;
+
+    function lyricsDlOverwriteChecked() {
+      const el = $('lyricsDlOverwrite');
+      return !!(el && el.checked);
+    }
+
+    function lyricsPanelQueryOverride() {
+      const el = $('lyricsDlQueryOverride');
+      const v = el && String(el.value || '').trim();
+      return v || undefined;
+    }
+
+    function lyricsDlLogAppend(line) {
+      const el = $('lyricsDlLog');
+      if (!el) return;
+      const t = new Date().toLocaleTimeString();
+      const chunk = `[${t}] ${line}\n`;
+      el.textContent = chunk + (el.textContent || '');
+      const lines = el.textContent.split('\n');
+      if (lines.length > LYRICS_DL_LOG_MAX_LINES) {
+        el.textContent = lines.slice(0, LYRICS_DL_LOG_MAX_LINES).join('\n');
+      }
+    }
+
+    function populateLyricsDlLibrarySelect(files) {
+      const list = Array.isArray(files) ? files : [];
+      const sel = $('lyricsDlSelect');
+      if (!sel) return;
+      const cur = sel.value;
+      sel.innerHTML = '';
+      const opt0 = document.createElement('option');
+      opt0.value = '';
+      opt0.textContent =
+        list.length === 0 ? '— No files in uploads — use Refresh list —' : '— Choose a file —';
+      sel.appendChild(opt0);
+      for (const m of list) {
+        const o = document.createElement('option');
+        o.value = m.rel_path;
+        const title = displayTrackTitle(m);
+        const base = m.basename || m.rel_path;
+        o.textContent = `${title} — ${base}`;
+        sel.appendChild(o);
+      }
+      if (cur && [...sel.options].some((x) => x.value === cur)) sel.value = cur;
+    }
+
+    async function syncLyricsDlPanel() {
+      const pill = $('lyricsDlPill');
+      const sub = $('lyricsDlSubline');
+      const alertEl = $('lyricsDlAlert');
+      const sel = $('lyricsDlSelect');
+      const qinp = $('lyricsDlQueryOverride');
+      const ow = $('lyricsDlOverwrite');
+      const actionIds = ['btnLyricsDlFetchSelected', 'btnLyricsDlFetchDeckA', 'btnLyricsDlFetchDeckB', 'btnLyricsDlFetchAll'];
+      const actionBtns = actionIds.map((id) => $(id)).filter(Boolean);
+      try {
+        const st = await api('/api/lyrics_downloader/status');
+        state.lyricsDl = st;
+        const ready = !!(st.module_present && st.syncedlyrics);
+        if (pill) {
+          pill.classList.remove('lyrics-dl-pill-ok', 'lyrics-dl-pill-warn', 'lyrics-dl-pill-err');
+          if (!st.module_present) {
+            pill.textContent = 'Module missing';
+            pill.classList.add('lyrics-dl-pill-err');
+          } else if (!st.syncedlyrics) {
+            pill.textContent = 'syncedlyrics missing';
+            pill.classList.add('lyrics-dl-pill-warn');
+          } else {
+            pill.textContent = 'Ready';
+            pill.classList.add('lyrics-dl-pill-ok');
+          }
+        }
+        if (sub) {
+          sub.textContent = ready
+            ? 'Fetches run on this PC; .lrc is saved next to each audio file under uploads/.'
+            : st.hint || 'Install dependencies to enable fetching.';
+        }
+        if (alertEl) {
+          if (!st.module_present) {
+            alertEl.textContent =
+              'Lyrics downloader needs samsel_web/automix_core.py beside the engine (same tree as SAMSEL Web).';
+            alertEl.hidden = false;
+          } else if (!st.syncedlyrics) {
+            alertEl.textContent =
+              'Install syncedlyrics on this PC (pip install syncedlyrics), restart the app, then click Refresh list on the library.';
+            alertEl.hidden = false;
+          } else {
+            alertEl.textContent = '';
+            alertEl.hidden = true;
+          }
+        }
+        actionBtns.forEach((b) => {
+          b.disabled = !ready;
+        });
+        if (sel) sel.disabled = !ready;
+        if (qinp) qinp.disabled = !ready;
+        if (ow) ow.disabled = !ready;
+      } catch (e) {
+        state.lyricsDl = { module_present: false, syncedlyrics: false };
+        if (pill) {
+          pill.textContent = 'Status error';
+          pill.classList.remove('lyrics-dl-pill-ok', 'lyrics-dl-pill-warn', 'lyrics-dl-pill-err');
+          pill.classList.add('lyrics-dl-pill-err');
+        }
+        if (sub) sub.textContent = String(e.message || e);
+        if (alertEl) {
+          alertEl.textContent = 'Could not read /api/lyrics_downloader/status.';
+          alertEl.hidden = false;
+        }
+        actionBtns.forEach((b) => {
+          b.disabled = true;
+        });
+        if (sel) sel.disabled = true;
+        if (qinp) qinp.disabled = true;
+        if (ow) ow.disabled = true;
+      }
+    }
+
+    async function fetchLyricsLrcForRow(relPath, opts = {}) {
+      if (!relPath) return;
+      const usePanelQuery = !!opts.usePanelQuery;
+      try {
+        const body = { rel_path: relPath, overwrite: lyricsDlOverwriteChecked() };
+        if (usePanelQuery) {
+          const q = lyricsPanelQueryOverride();
+          if (q) body.query_override = q;
+        }
+        const r = await postJson('/api/lyrics_downloader/fetch', body);
+        if (r.skipped) {
+          lyricsDlLogAppend(`Skipped (exists): ${relPath}`);
+          logMessage(`LRC skipped (already exists): ${relPath}`);
+        } else if (r.ok) {
+          lyricsDlLogAppend(`Saved: ${relPath} — ${r.query || ''}`);
+          logMessage(`LRC saved: ${relPath}${r.query ? ` — ${r.query}` : ''}`);
+        } else {
+          lyricsDlLogAppend(`Failed: ${relPath} — ${r.error || 'no match'}`);
+          alert(r.error || 'No synced lyrics for this search.');
+        }
+      } catch (e) {
+        lyricsDlLogAppend(`Error: ${relPath} — ${e.message}`);
+        alert(e.message);
+      }
+    }
+
+    async function fetchLyricsLrcForDeck(deck) {
+      try {
+        const body = { deck, overwrite: lyricsDlOverwriteChecked() };
+        const q = lyricsPanelQueryOverride();
+        if (q) body.query_override = q;
+        const r = await postJson('/api/lyrics_downloader/fetch_deck', body);
+        if (r.skipped) {
+          lyricsDlLogAppend(`Deck ${deck}: skipped (exists) — ${r.rel_path || ''}`);
+          logMessage(`LRC skipped (already exists): deck ${deck}`);
+        } else if (r.ok) {
+          lyricsDlLogAppend(`Deck ${deck}: saved — ${r.query || ''} (${r.rel_path || ''})`);
+          logMessage(`LRC saved: deck ${deck}${r.query ? ` — ${r.query}` : ''}`);
+        } else {
+          lyricsDlLogAppend(`Deck ${deck}: failed — ${r.error || ''}`);
+          alert(r.error || 'No synced lyrics for this deck’s file.');
+        }
+      } catch (e) {
+        lyricsDlLogAppend(`Deck ${deck}: ${e.message}`);
+        alert(e.message);
+      }
+    }
+
+    async function fetchLyricsLrcForAllRows() {
+      const tb = $('libraryTableBody');
+      if (!tb) return;
+      const paths = [...tb.querySelectorAll('tr[data-rel-path]')]
+        .map((tr) => tr.getAttribute('data-rel-path'))
+        .filter(Boolean);
+      if (!paths.length) {
+        alert('No library rows. Refresh the list after adding files to uploads.');
+        return;
+      }
+      if (!(state.lyricsDl && state.lyricsDl.syncedlyrics)) {
+        alert('Lyrics downloader is not ready. Install syncedlyrics, then click Refresh list.');
+        return;
+      }
+      if (paths.length > 30 && !confirm(`Fetch synced .lrc for ${paths.length} tracks?`)) return;
+      try {
+        const r = await postJson('/api/lyrics_downloader/fetch_batch', {
+          rel_paths: paths,
+          overwrite: lyricsDlOverwriteChecked(),
+        });
+        const okC = (r.results || []).filter((x) => x.ok && !x.skipped).length;
+        const skC = (r.results || []).filter((x) => x.skipped).length;
+        const failC = (r.results || []).filter((x) => !x.ok).length;
+        const msg = `LRC batch: ${okC} saved, ${skC} skipped, ${failC} failed${r.truncated ? ' (truncated)' : ''}`;
+        lyricsDlLogAppend(msg);
+        logMessage(msg);
+      } catch (e) {
+        lyricsDlLogAppend(`Batch error: ${e.message}`);
+        alert(e.message);
+      }
+    }
+
+    function syncLibraryActiveRows() {
+      const tb = $('libraryTableBody');
+      if (!tb) return;
+      const pa = state.status?.deck_a?.path || '';
+      const pb = state.status?.deck_b?.path || '';
+      tb.querySelectorAll('tr[data-path]').forEach((tr) => {
+        const p = tr.getAttribute('data-path');
+        tr.classList.toggle('on-a', !!p && p === pa);
+        tr.classList.toggle('on-b', !!p && p === pb);
+      });
+    }
+
+    function renderLibraryTable(files) {
+      const tb = $('libraryTableBody');
+      const hint = $('libraryHint');
+      tb.innerHTML = '';
+      if (!files.length) {
+        hint.textContent = 'No audio files in uploads yet. Load a track or folder on a deck to add files.';
+        populateLyricsDlLibrarySelect([]);
+        syncLibraryActiveRows();
+        return;
+      }
+      const lrcHint =
+        state.lyricsDl && state.lyricsDl.syncedlyrics
+          ? ' The .lrc column or top bar “Lyrics downloader” popup saves synced .lrc beside each file (syncedlyrics / lrclib).'
+          : '';
+      hint.textContent = `${files.length} file(s). Pink / cyan bar = file is loaded on deck A / B. Click a row to load on the deck selected above.${lrcHint}`;
+      const esc = (s) => {
+        const d = document.createElement('div');
+        d.textContent = s == null ? '' : String(s);
+        return d.innerHTML;
+      };
+      for (const m of files) {
+        const tr = document.createElement('tr');
+        tr.dataset.relPath = m.rel_path;
+        tr.dataset.path = m.path || '';
+        tr.title = 'How to use: Under “Play on deck”, pick A or B, then click this row. That deck loads this file (its playlist becomes this single track). Click “Start Engine” if the engine is off and you want mixer output. After uploading new files elsewhere, click “Refresh list” here. Pink/cyan bar = file is currently loaded on A/B.';
+        const sub = m.comment ? `<div class="lib-sub">${esc(m.comment)}</div>` : '';
+        const disc = m.disc != null || m.disc_total != null ? `${dash(m.disc)}/${dash(m.disc_total)}` : '—';
+        const trk = m.track != null || m.track_total != null ? `${dash(m.track)}/${dash(m.track_total)}` : '—';
+        tr.innerHTML = `
+          <td><div class="lib-title">${esc(displayTrackTitle(m))}</div>${sub}</td>
+          <td>${esc(dash(m.artist))}</td>
+          <td>${esc(dash(m.album))}</td>
+          <td>${esc(timeFmt(m.duration_sec))}</td>
+          <td>${esc(m.bpm_tag != null ? fmt(m.bpm_tag, 2) : (m.bpm_analyzed != null ? fmt(m.bpm_analyzed, 2) : '—'))}</td>
+          <td>${esc(m.samplerate != null ? m.samplerate : '—')}</td>
+          <td>${esc(m.channels != null ? m.channels : '—')}</td>
+          <td>${esc(m.bitdepth != null ? m.bitdepth : '—')}</td>
+          <td>${esc(m.bitrate != null ? m.bitrate : '—')}</td>
+          <td>${esc(dash(m.format))}</td>
+          <td>${esc(formatBytes(m.size_bytes))}</td>
+          <td class="mono">${esc((m.modified_iso || '').replace('T', ' '))}</td>
+          <td>${esc(disc)}</td>
+          <td>${esc(trk)}</td>
+          <td>${esc(dash(m.genre))}</td>
+          <td>${esc(dash(m.year))}</td>
+          <td>${esc(dash(m.composer))}</td>
+          <td class="mono">${esc(m.basename || '')}</td>
+          <td class="lib-col-lrc"></td>
+        `;
+        const lrcCell = tr.querySelector('.lib-col-lrc');
+        if (lrcCell) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'btn-neutral btn-inline lib-lrc-btn';
+          btn.textContent = '.lrc';
+          btn.disabled = !(state.lyricsDl && state.lyricsDl.syncedlyrics);
+          btn.title =
+            state.lyricsDl && state.lyricsDl.syncedlyrics
+              ? 'Download synced .lrc next to this file (syncedlyrics / lrclib — same stack as SAMSEL Web Downloader). Does not load the track on a deck.'
+              : 'Install syncedlyrics on the server, then refresh the library list.';
+          btn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            fetchLyricsLrcForRow(m.rel_path, { usePanelQuery: false });
+          });
+          lrcCell.appendChild(btn);
+        }
+        tr.addEventListener('click', () => playLibraryFile(m.rel_path));
+        tb.appendChild(tr);
+      }
+      populateLyricsDlLibrarySelect(files);
+      syncLibraryActiveRows();
+    }
+
+    async function refreshLibrary() {
+      const hint = $('libraryHint');
+      try {
+        hint.textContent = 'Loading library…';
+        await syncLyricsDlPanel();
+        const data = await api('/api/library');
+        renderLibraryTable(data.files || []);
+      } catch (e) {
+        hint.textContent = `Library load failed: ${e.message}`;
+      }
+    }
+
+    async function playLibraryFile(relPath) {
+      if (!relPath) return;
+      const deck = $('libraryTargetDeck').value;
+      const sel = $('lyricsDlSelect');
+      if (sel && relPath && [...sel.options].some((o) => o.value === relPath)) {
+        sel.value = relPath;
+      }
+      try {
+        await postJson('/api/play_library_file', { deck, rel_path: relPath });
+        logMessage(`Library → Deck ${deck}: ${relPath}`);
+        await refreshStatus(true);
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    function logMessage(msg) {
+      const box = $('logText');
+      box.textContent = `${new Date().toLocaleTimeString()}  ${msg}\n\n` + box.textContent;
+    }
+
+    function isDeckMultiFileMode(deck) {
+      const name = `fileMode${deck}`;
+      return document.querySelector(`input[name="${name}"]:checked`)?.value === 'multi';
+    }
+
+    function activeDeckFileInput(deck) {
+      return isDeckMultiFileMode(deck) ? $(`file${deck}_multi`) : $(`file${deck}_one`);
+    }
+
+    function syncDeckFileInputsVisibility(deck) {
+      const multi = isDeckMultiFileMode(deck);
+      const one = $(`file${deck}_one`);
+      const many = $(`file${deck}_multi`);
+      if (!one || !many) return;
+      one.classList.toggle('is-hidden', multi);
+      many.classList.toggle('is-hidden', !multi);
+    }
+
+    function clearDeckFileInputs(deck) {
+      const one = $(`file${deck}_one`);
+      const many = $(`file${deck}_multi`);
+      if (one) one.value = '';
+      if (many) many.value = '';
+    }
+
+    async function uploadDeckFilePicker(deck) {
+      const input = activeDeckFileInput(deck);
+      if (!input || !input.files.length) return;
+      const n = input.files.length;
+      try {
+        if (!isDeckMultiFileMode(deck) || n === 1) {
+          const fd = new FormData();
+          fd.append('file', input.files[0]);
+          const data = await api(`/upload/${deck}`, { method: 'POST', body: fd });
+          logMessage(`Deck ${deck} loaded: ${data.basename || input.files[0].name}`);
+        } else {
+          const fd = new FormData();
+          Array.from(input.files).forEach((file) => fd.append('files', file));
+          const data = await api(`/upload_folder/${deck}`, { method: 'POST', body: fd });
+          logMessage(`Deck ${deck}: ${data.count} track(s) from file picker (BPM sorted)`);
+        }
+        clearDeckFileInputs(deck);
+        await refreshStatus(true);
+        await refreshLibrary();
+      } catch (err) {
+        logMessage(`File upload Deck ${deck} failed: ${err.message}`);
+        alert(err.message);
+      }
+    }
+
+    async function uploadFolder(deck) {
+      const input = $(`folder${deck}`);
+      if (!input.files.length) return;
+      const fd = new FormData();
+      Array.from(input.files).forEach(file => fd.append('files', file));
+      try {
+        const data = await api(`/upload_folder/${deck}`, { method: 'POST', body: fd });
+        logMessage(`Deck ${deck} folder loaded: ${data.count} tracks`);
+        input.value = '';
+        await refreshStatus(true);
+        await refreshLibrary();
+      } catch (err) {
+        logMessage(`Folder upload Deck ${deck} failed: ${err.message}`);
+        alert(err.message);
+      }
+    }
+
+    function timeToX(t01, wv, width) {
+      return ((t01 - wv.viewStart) / wv.viewWidth) * width;
+    }
+
+    const SERATO_CUE_COLORS = ['#00e8cc', '#c070ff', '#8eff6b', '#ff5252', '#ffc14a', '#6eb3ff', '#ff7edb', '#fff59d'];
+
+    function parseWaveformData(wf) {
+      if (!wf) return null;
+      if (Array.isArray(wf)) {
+        const [mins, maxs] = wf;
+        return { mins, maxs, low: null, mid: null, high: null };
+      }
+      if (wf.mins && wf.maxs) {
+        return {
+          mins: wf.mins,
+          maxs: wf.maxs,
+          low: wf.low || null,
+          mid: wf.mid || null,
+          high: wf.high || null,
+        };
+      }
+      return null;
+    }
+
+    function seratoBaseRGB(l, m, h) {
+      const n = l + m + h + 1e-6;
+      l /= n; m /= n; h /= n;
+      const r = 255 * clamp(0.08 + l * 0.92 + m * 0.4 + h * 0.07, 0, 1);
+      const g = 255 * clamp(0.05 + l * 0.2 + m * 0.8 + h * 0.35, 0, 1);
+      const b = 255 * clamp(0.1 + l * 0.05 + m * 0.25 + h * 0.95, 0, 1);
+      return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
+    }
+
+    function seratoTipRGB(l, m, h) {
+      const n = l + m + h + 1e-6;
+      l /= n; m /= n; h /= n;
+      const r = 255 * clamp(0.32 + l * 0.55 + m * 0.38 + h * 0.22, 0, 1);
+      const g = 255 * clamp(0.42 + l * 0.15 + m * 0.52 + h * 0.48, 0, 1);
+      const b = 255 * clamp(0.52 + l * 0.06 + m * 0.22 + h * 1, 0, 1);
+      return `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
+    }
+
+    function drawWave(canvasId, deck, accent) {
+      const canvas = $(canvasId);
+      const dk = canvasId.endsWith('A') ? 'A' : 'B';
+      const wv = waveView[dk];
+      const dpr = window.devicePixelRatio || 1;
+      const cssWidth = canvas.clientWidth || 600;
+      const cssHeight = canvas.clientHeight || 170;
+      const width = Math.floor(cssWidth * dpr);
+      const height = Math.floor(cssHeight * dpr);
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+      canvas.classList.toggle('wave-pan', wv.viewWidth < 0.999);
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      if ('imageSmoothingQuality' in ctx) ctx.imageSmoothingQuality = 'low';
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+      ctx.lineWidth = 1 * dpr;
+      for (let i = 1; i < 4; i++) {
+        const y = (height / 4) * i;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+      }
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+      ctx.beginPath(); ctx.moveTo(0, height / 2); ctx.lineTo(width, height / 2); ctx.stroke();
+
+      if (!deck || !deck.waveform) {
+        ctx.fillStyle = 'rgba(255,255,255,0.35)';
+        ctx.font = `${14 * dpr}px sans-serif`;
+        ctx.fillText('No waveform loaded', 16 * dpr, 24 * dpr);
+        return;
+      }
+
+      const wfd = parseWaveformData(deck.waveform);
+      if (!wfd) return;
+      const { mins, maxs, low: lowE, mid: midE, high: highE } = wfd;
+      if (!mins || !maxs || !mins.length || !maxs.length) return;
+
+      const len = Math.min(mins.length, maxs.length);
+      if (wv.lastWaveLen !== len) {
+        wv.viewStart = 0;
+        wv.viewWidth = 1;
+        wv.lastWaveLen = len;
+      }
+      wv.viewStart = clamp(wv.viewStart, 0, 1 - wv.viewWidth);
+      if (wv.viewWidth < WAVE_ZOOM_MIN) wv.viewWidth = WAVE_ZOOM_MIN;
+
+      const mid = height / 2;
+      const denom = Math.max(1, width - 1);
+      const ampScale = mid * 0.96;
+      const wfEmphasis = (v) => {
+        const a = Math.abs(v);
+        if (a <= 1e-9) return 0;
+        const c = Math.min(1, a);
+        return Math.sign(v) * Math.pow(c, 1.24);
+      };
+      const lm = len - 1;
+      const outlineScale = clamp(0.36 + wv.viewWidth * 1.85, 0.4, 1);
+
+      const hasSpectral = lowE && midE && highE
+        && lowE.length >= len && midE.length >= len && highE.length >= len;
+
+      const sampleColumn = (px) => {
+        const t0 = wv.viewStart + (px / denom) * wv.viewWidth;
+        const t1 = px >= width - 1
+          ? wv.viewStart + wv.viewWidth
+          : wv.viewStart + ((px + 1) / denom) * wv.viewWidth;
+        const f0 = clamp(t0, 0, 1) * lm;
+        const f1 = clamp(t1, 0, 1) * lm;
+        let i0 = Math.floor(f0);
+        let i1 = Math.floor(f1);
+        if (t1 >= 1 - 1e-12) i1 = lm;
+        i0 = clamp(i0, 0, lm);
+        i1 = clamp(i1, 0, lm);
+        if (i1 < i0) {
+          const s = i0;
+          i0 = i1;
+          i1 = s;
+        }
+        let minV = mins[i0];
+        let maxV = maxs[i0];
+        let biSpectral = i0;
+        let specBest = -1;
+        if (hasSpectral) {
+          specBest = lowE[i0] + midE[i0] + highE[i0];
+        }
+        for (let i = i0 + 1; i <= i1; i++) {
+          minV = Math.min(minV, mins[i]);
+          maxV = Math.max(maxV, maxs[i]);
+          if (hasSpectral) {
+            const s = lowE[i] + midE[i] + highE[i];
+            if (s > specBest) {
+              specBest = s;
+              biSpectral = i;
+            }
+          }
+        }
+        return { minV, maxV, biSpectral };
+      };
+
+      const waveGradient = ctx.createLinearGradient(0, 0, width, 0);
+      if (accent === '#ff5d9b') {
+        waveGradient.addColorStop(0, '#ff3d88');
+        waveGradient.addColorStop(.4, '#ff7eb0');
+        waveGradient.addColorStop(1, '#ffd060');
+      } else {
+        waveGradient.addColorStop(0, '#00c8ff');
+        waveGradient.addColorStop(.5, '#7af0ff');
+        waveGradient.addColorStop(1, '#7aff88');
+      }
+
+      const tBeat0 = wv.viewStart;
+      const tBeat1 = wv.viewStart + wv.viewWidth;
+      if (Array.isArray(deck.beat_samples) && deck.beat_samples.length && deck.audio_len > 0) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+        ctx.lineWidth = 1 * dpr;
+        let drawn = 0;
+        const maxBeatLines = 480;
+        for (let i = 0; i < deck.beat_samples.length && drawn < maxBeatLines; i++) {
+          const bs = deck.beat_samples[i];
+          if (!Number.isFinite(bs)) continue;
+          const t = clamp(bs / deck.audio_len, 0, 1);
+          if (t < tBeat0 || t > tBeat1) continue;
+          const bx = timeToX(t, wv, width);
+          ctx.beginPath();
+          ctx.moveTo(bx, 0);
+          ctx.lineTo(bx, height);
+          ctx.stroke();
+          drawn++;
+        }
+      }
+
+      if (deck.loop && deck.loop.enabled && Number.isFinite(deck.loop.start_sample) && Number.isFinite(deck.loop.end_sample) && deck.audio_len > 0) {
+        const t1 = clamp(deck.loop.start_sample / deck.audio_len, 0, 1);
+        const t2 = clamp(deck.loop.end_sample / deck.audio_len, 0, 1);
+        const vis0 = Math.max(t1, wv.viewStart);
+        const vis1 = Math.min(t2, wv.viewStart + wv.viewWidth);
+        if (vis1 > vis0) {
+          const x1 = timeToX(vis0, wv, width);
+          const x2 = timeToX(vis1, wv, width);
+          ctx.fillStyle = 'rgba(60, 220, 100, 0.14)';
+          ctx.fillRect(x1, 0, Math.max(2 * dpr, x2 - x1), height);
+        }
+      }
+
+      ctx.shadowBlur = 0;
+      const waveCols = new Array(width);
+      const yHiPx = new Array(width);
+      const yLoPx = new Array(width);
+      for (let px = 0; px < width; px++) {
+        const col = sampleColumn(px);
+        waveCols[px] = col;
+        yHiPx[px] = Math.round(mid + wfEmphasis(col.maxV) * ampScale);
+        yLoPx[px] = Math.round(mid + wfEmphasis(col.minV) * ampScale);
+      }
+      const midR = Math.round(mid);
+      for (let px = 0; px < width; px++) {
+        const col = waveCols[px];
+        const yLoR = yLoPx[px];
+        const yHiR = yHiPx[px];
+        if (hasSpectral) {
+          const bi = col.biSpectral;
+          const l = lowE[bi];
+          const m = midE[bi];
+          const h = highE[bi];
+          if (yLoR < midR - 1) {
+            const gUp = ctx.createLinearGradient(px, yLoR, px, midR);
+            gUp.addColorStop(0, seratoTipRGB(l, m, h));
+            gUp.addColorStop(1, seratoBaseRGB(l, m, h));
+            ctx.fillStyle = gUp;
+            ctx.fillRect(px, yLoR, 1, midR - yLoR);
+          }
+          if (yHiR > midR + 1) {
+            const gDn = ctx.createLinearGradient(px, midR, px, yHiR);
+            gDn.addColorStop(0, seratoBaseRGB(l, m, h));
+            gDn.addColorStop(1, seratoTipRGB(l, m, h));
+            ctx.fillStyle = gDn;
+            ctx.fillRect(px, midR, 1, yHiR - midR);
+          }
+        } else {
+          ctx.fillStyle = waveGradient;
+          const top = Math.min(yLoR, yHiR);
+          const hCol = Math.max(1 * dpr, Math.abs(yHiR - yLoR));
+          ctx.fillRect(px, top, 1, hCol);
+        }
+      }
+
+      ctx.lineCap = 'butt';
+      ctx.lineJoin = 'miter';
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+      ctx.lineWidth = Math.max(1, dpr * 1.05 * outlineScale);
+      ctx.beginPath();
+      for (let px = 0; px < width; px++) {
+        const yHi = yHiPx[px];
+        if (px === 0) ctx.moveTo(0, yHi);
+        else ctx.lineTo(px, yHi);
+      }
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = Math.max(1, dpr * 0.55 * outlineScale);
+      ctx.beginPath();
+      for (let px = 0; px < width; px++) {
+        const yHi = yHiPx[px];
+        if (px === 0) ctx.moveTo(0, yHi);
+        else ctx.lineTo(px, yHi);
+      }
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+      ctx.lineWidth = Math.max(1, dpr * 1.05 * outlineScale);
+      ctx.beginPath();
+      for (let px = 0; px < width; px++) {
+        const yLo = yLoPx[px];
+        if (px === 0) ctx.moveTo(0, yLo);
+        else ctx.lineTo(px, yLo);
+      }
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+      ctx.lineWidth = Math.max(1, dpr * 0.55 * outlineScale);
+      ctx.beginPath();
+      for (let px = 0; px < width; px++) {
+        const yLo = yLoPx[px];
+        if (px === 0) ctx.moveTo(0, yLo);
+        else ctx.lineTo(px, yLo);
+      }
+      ctx.stroke();
+
+      if (wv.viewWidth < 0.999) {
+        ctx.fillStyle = 'rgba(255,255,255,0.1)';
+        ctx.fillRect(0, 0, 3 * dpr, height);
+        ctx.fillRect(width - 3 * dpr, 0, 3 * dpr, height);
+        ctx.fillStyle = 'rgba(255,255,255,0.5)';
+        ctx.font = `${11 * dpr}px sans-serif`;
+        const pct = Math.round(100 / wv.viewWidth);
+        ctx.fillText(`${pct}%`, 8 * dpr, 16 * dpr);
+      }
+
+      if (Number.isFinite(deck.audio_len) && Number.isFinite(deck.playhead) && deck.audio_len > 0) {
+        const pos = clamp(deck.playhead / deck.audio_len, 0, 1);
+        if (pos >= wv.viewStart && pos <= wv.viewStart + wv.viewWidth) {
+          const x = timeToX(pos, wv, width);
+          const fh = 8 * dpr;
+          const fw = 5 * dpr;
+          const gap = 2 * dpr;
+          ctx.fillStyle = '#ffffff';
+          ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+          ctx.lineWidth = 1 * dpr;
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x - fw, fh + gap);
+          ctx.lineTo(x + fw, fh + gap);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(x, height);
+          ctx.lineTo(x - fw, height - fh - gap);
+          ctx.lineTo(x + fw, height - fh - gap);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = Math.max(1.5, 2 * dpr);
+          ctx.beginPath();
+          ctx.moveTo(x, fh + gap);
+          ctx.lineTo(x, height - fh - gap);
+          ctx.stroke();
+        }
+      }
+
+      if (deck.hot_cues) {
+        const triH = 9 * dpr;
+        const triW = 4.5 * dpr;
+        let ci = 0;
+        Object.values(deck.hot_cues).forEach((sample) => {
+          if (!Number.isFinite(sample) || deck.audio_len <= 0) return;
+          const t = clamp(sample / deck.audio_len, 0, 1);
+          if (t < wv.viewStart || t > wv.viewStart + wv.viewWidth) return;
+          const x = timeToX(t, wv, width);
+          ctx.fillStyle = SERATO_CUE_COLORS[ci % SERATO_CUE_COLORS.length];
+          ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+          ctx.lineWidth = 1 * dpr;
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x - triW, triH);
+          ctx.lineTo(x + triW, triH);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+          ci++;
+        });
+      }
+    }
+
+    function refreshWaveformsOnly() {
+      drawWave('waveA', state.status?.deck_a, '#ff5d9b');
+      drawWave('waveB', state.status?.deck_b, '#00d7ff');
+    }
+
+    function waveformLocalToGlobal(deck, localRatio) {
+      const wv = waveView[deck];
+      return clamp(wv.viewStart + localRatio * wv.viewWidth, 0, 1);
+    }
+
+    async function waveformSeek(deck, ratio, setCue = false) {
+      const d = state.status?.[`deck_${deck.toLowerCase()}`];
+      if (!d || !Number.isFinite(d.audio_len) || d.audio_len <= 0) return;
+      const sample = Math.round(clamp(ratio, 0, 1) * d.audio_len);
+      try {
+        if (setCue) {
+          await post(`/waveform_cue/${deck}`, { sample });
+          logMessage(`Deck ${deck} cue set from waveform`);
+        } else {
+          await post(`/waveform_seek/${deck}`, { sample });
+        }
+        refreshStatus(false);
+      } catch (err) {
+        logMessage(`Waveform action Deck ${deck} failed: ${err.message}`);
+      }
+    }
+
+    function onWaveMouseMove(event) {
+      if (!waveDrag) return;
+      const dx = event.clientX - waveDrag.x0;
+      if (waveDrag.vw0 < 1 - 1e-6 && Math.abs(dx) > 2) waveDrag.moved = true;
+      if (!waveDrag.moved) return;
+      const dk = waveDrag.deck;
+      let ns = waveDrag.vs0 - (dx / waveDrag.rw) * waveDrag.vw0;
+      ns = clamp(ns, 0, 1 - waveDrag.vw0);
+      waveView[dk].viewStart = ns;
+      refreshWaveformsOnly();
+    }
+
+    function onWaveMouseUp(event) {
+      if (!waveDrag) return;
+      const d = waveDrag;
+      const dk = d.deck;
+      const canvasId = dk === 'A' ? 'waveA' : 'waveB';
+      const canvas = $(canvasId);
+      waveDrag = null;
+      if (event.button !== 0) return;
+      if (d.moved) return;
+      const rect = canvas.getBoundingClientRect();
+      const lr = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+      waveformSeek(dk, waveformLocalToGlobal(dk, lr), false);
+    }
+
+    function bindWaveform(canvasId, deck) {
+      const canvas = $(canvasId);
+      const getLocalRatio = (event) => {
+        const rect = canvas.getBoundingClientRect();
+        return clamp((event.clientX - rect.left) / rect.width, 0, 1);
+      };
+
+      canvas.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        const wv = waveView[deck];
+        const rect = canvas.getBoundingClientRect();
+        const mx = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+        const z = event.deltaY < 0 ? 1 / WAVE_ZOOM_FACTOR : WAVE_ZOOM_FACTOR;
+        let nw = clamp(wv.viewWidth * z, WAVE_ZOOM_MIN, 1);
+        const anchorT = wv.viewStart + mx * wv.viewWidth;
+        let ns = anchorT - mx * nw;
+        ns = clamp(ns, 0, 1 - nw);
+        wv.viewWidth = nw;
+        wv.viewStart = ns;
+        refreshWaveformsOnly();
+      }, { passive: false });
+
+      canvas.addEventListener('dblclick', (event) => {
+        event.preventDefault();
+        waveView[deck].viewStart = 0;
+        waveView[deck].viewWidth = 1;
+        refreshWaveformsOnly();
+      });
+
+      canvas.addEventListener('mousedown', (event) => {
+        if (event.button !== 0) return;
+        const wv = waveView[deck];
+        const rect = canvas.getBoundingClientRect();
+        waveDrag = {
+          deck,
+          x0: event.clientX,
+          vs0: wv.viewStart,
+          vw0: wv.viewWidth,
+          rw: rect.width,
+          moved: false,
+        };
+      });
+
+      canvas.addEventListener('contextmenu', (event) => {
+        event.preventDefault();
+        const lr = getLocalRatio(event);
+        waveformSeek(deck, waveformLocalToGlobal(deck, lr), true);
+      });
+    }
+
+    function renderCueButtons(deckName, deck) {
+      const row = $(`cueRow${deckName}`);
+      row.innerHTML = '';
+      for (let i = 1; i <= 8; i++) {
+        const wrap = document.createElement('div');
+        wrap.className = 'cue-pair';
+
+        const setBtn = document.createElement('button');
+        setBtn.className = 'btn-neutral btn-cue';
+        setBtn.textContent = `S${i}`;
+        setBtn.title = `Deck ${deckName} — Hot cue ${i} (SET): Move the playhead where you want (Play, or pause at the moment). Click S${i} to save that position into slot ${i}. Later press J${i} to jump back. Needs engine running and a track loaded on this deck.`;
+        setBtn.onclick = async () => { try { await post(`/cue_set/${deckName}`, { idx: i }); refreshStatus(false); } catch (err) { alert(err.message); } };
+
+        const jumpBtn = document.createElement('button');
+        jumpBtn.className = (deck?.hot_cues?.[i] != null ? 'btn-warn' : 'btn-neutral') + ' btn-cue';
+        jumpBtn.textContent = `J${i}`;
+        jumpBtn.title = `Deck ${deckName} — Hot cue ${i} (JUMP): Jumps the playhead to the position you saved with S${i}. If the button looks dim or nothing happens, set the cue first with S${i} while the track is at the desired moment.`;
+        jumpBtn.onclick = async () => { try { await post(`/cue_jump/${deckName}`, { idx: i }); refreshStatus(false); } catch (err) { alert(err.message); } };
+
+        wrap.appendChild(setBtn);
+        wrap.appendChild(jumpBtn);
+        row.appendChild(wrap);
+      }
+    }
+
+    function renderPlaylist(deckName, deck) {
+      const sel = $(`playlist${deckName}`);
+      sel.innerHTML = '';
+      const playlist = deck?.playlist || [];
+      const details = deck?.playlist_details || [];
+      if (!playlist.length) {
+        const opt = document.createElement('option');
+        opt.textContent = 'No playlist loaded';
+        opt.value = '';
+        sel.appendChild(opt);
+        return;
+      }
+      const curPath = deck?.path || '';
+      const liveBpm = deck?.bpm != null ? Number(deck.bpm) : NaN;
+      playlist.forEach((path, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        const d = details[idx];
+        const base = (d && d.basename) ? d.basename : path.split(/[\\/]/).pop();
+        let bpmPart = '— BPM';
+        if (path === curPath && Number.isFinite(liveBpm) && liveBpm > 0) {
+          bpmPart = `${liveBpm.toFixed(2)} BPM`;
+        } else if (d && d.bpm != null) {
+          const bn = Number(d.bpm);
+          if (Number.isFinite(bn) && bn > 0) bpmPart = `${bn.toFixed(2)} BPM`;
+        }
+        opt.textContent = `${String(idx + 1).padStart(2, '0')}.  ${bpmPart}  ·  ${base}`;
+        sel.appendChild(opt);
+      });
+      let pi = Number(deck?.playlist_index);
+      if (!Number.isFinite(pi) || pi < 0) pi = 0;
+      pi = Math.min(pi, playlist.length - 1);
+      sel.value = String(pi);
+    }
+
+    function mergeDeckFromPoll(prev, next) {
+      if (!next) return next;
+      const pathPrev = prev?.path || '';
+      const pathNext = next.path || '';
+      if (pathPrev !== pathNext) return next;
+      if (Object.prototype.hasOwnProperty.call(next, 'waveform')) return next;
+      if (prev?.waveform) return { ...next, waveform: prev.waveform };
+      return next;
+    }
+
+    function updateDeck(deckName, deck) {
+      const prefix = `deck${deckName}`;
+      $(`${prefix}Name`).textContent = deck?.basename || 'No track';
+      const bpmN = deck != null ? Number(deck.bpm) : NaN;
+      $(`${prefix}Bpm`).textContent = deck != null && Number.isFinite(bpmN) && bpmN > 0 ? fmt(bpmN) : '--';
+      const durN = deck != null ? Number(deck.duration_sec) : NaN;
+      $(`${prefix}Duration`).textContent = deck != null && Number.isFinite(durN) && durN > 0 ? timeFmt(durN) : '--';
+      $(`${prefix}Playhead`).textContent = deck ? timeFmt(deck.playhead_sec) : '--';
+      $(`${prefix}State`).textContent = !deck ? 'Idle' : (deck.playing ? 'Playing' : 'Stopped');
+      $(`gain${deckName}`).value = deck?.gain ?? 1;
+      $(`gain${deckName}Label`).textContent = fmt(deck?.gain ?? 1);
+      $(`seek${deckName}`).max = deck?.duration_sec || '';
+      renderPlaylist(deckName, deck);
+      renderCueButtons(deckName, deck);
+      drawWave(`wave${deckName}`, deck, deckName === 'A' ? '#ff5d9b' : '#00d7ff');
+    }
+
+    function updateStatusUI(data) {
+      state.status = data;
+      setChip('chipEngine', `Engine: ${data.engine_running ? 'running' : 'stopped'}`, data.engine_running ? 'ok' : 'warn');
+      setChip('chipStream', `Stream: ${state.streamConnected ? 'connected' : (data.stream_available ? 'ready' : 'offline')}`, state.streamConnected ? 'ok' : (data.stream_available ? 'warn' : 'err'));
+      setChip('chipAuto', `Auto DJ: ${data.auto_dj ? 'on' : 'off'}`, data.auto_dj ? 'ok' : '');
+      setChip('chipRec', `Recording: ${data.recording ? 'on' : 'off'}`, data.recording ? 'warn' : '');
+
+      $('crossfader').value = data.crossfader ?? 0.5;
+      $('crossfaderLabel').textContent = fmt(data.crossfader ?? 0.5);
+      $('masterGain').value = data.master_gain ?? 1;
+      $('masterGainLabel').textContent = fmt(data.master_gain ?? 1);
+      syncEngEqFromStatus(data);
+      $('statusText').textContent = data.status_text || 'No status text.';
+      $('jsonStatus').textContent = JSON.stringify(data, null, 2);
+      $('logText').textContent = (data.log || []).slice().reverse().join('\n');
+      $('lastUpdate').textContent = new Date().toLocaleTimeString();
+      if (data.recording_path) $('recordResult').textContent = data.recording_path;
+
+      const tj = data.transition_jingle || {};
+      const tjEn = $('transitionJingleEnabled');
+      if (tjEn) tjEn.checked = !!tj.enabled;
+      const tjGain = $('transitionJingleGain');
+      if (tjGain) {
+        const g = Number.isFinite(Number(tj.gain)) ? Number(tj.gain) : 0.65;
+        tjGain.value = String(g);
+        const gl = $('transitionJingleGainLabel');
+        if (gl) gl.textContent = fmt(g);
+      }
+      const tjOrd = $('transitionJingleOrder');
+      if (tjOrd) tjOrd.value = tj.order === 'random' ? 'random' : 'sequential';
+      const slots = Array.isArray(tj.slots) ? tj.slots : [];
+      for (let i = 0; i < 4; i++) {
+        const row = $(`transitionJingleBasename${i}`);
+        const s = slots.find((x) => x && Number(x.index) === i);
+        if (row) row.textContent = s && s.basename ? s.basename : '— none —';
+        const playBtn = document.querySelector(`button[data-tj-play="${i}"]`);
+        if (playBtn) {
+          const canPlay = !!data.engine_running && !!(s && s.present);
+          playBtn.disabled = !canPlay;
+        }
+      }
+
+      updateDeck('A', data.deck_a);
+      updateDeck('B', data.deck_b);
+      syncLibraryActiveRows();
+    }
+
+    async function refreshStatus(includeWaveforms = false) {
+      try {
+        const q = includeWaveforms ? '?waveforms=true' : '?waveforms=false';
+        const data = await api(`/status${q}`);
+        if (!includeWaveforms) {
+          const prevA = state.status?.deck_a;
+          const prevB = state.status?.deck_b;
+          const mergedA = mergeDeckFromPoll(prevA, data.deck_a);
+          const mergedB = mergeDeckFromPoll(prevB, data.deck_b);
+          const pathChanged =
+            (prevA?.path || '') !== (mergedA?.path || '')
+            || (prevB?.path || '') !== (mergedB?.path || '');
+          if (pathChanged) {
+            await refreshStatus(true);
+            return;
+          }
+          data.deck_a = mergedA;
+          data.deck_b = mergedB;
+        }
+        updateStatusUI(data);
+      } catch (err) {
+        setChip('chipEngine', 'Engine: error', 'err');
+        $('statusText').textContent = err.message;
+      }
+    }
+
+    async function connectStream() {
+      try {
+        if (!state.audioCtx) {
+          state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          state.gainNode = state.audioCtx.createGain();
+          state.scriptNode = state.audioCtx.createScriptProcessor(4096, 0, 2);
+          state.scriptNode.onaudioprocess = (event) => {
+            const outL = event.outputBuffer.getChannelData(0);
+            const outR = event.outputBuffer.getChannelData(1);
+            outL.fill(0); outR.fill(0);
+            let offset = 0;
+            while (offset < outL.length && state.streamQueue.length) {
+              const frame = state.streamQueue[0];
+              const take = Math.min(frame.length, outL.length - offset);
+              for (let i = 0; i < take; i++) {
+                outL[offset + i] = frame.left[i];
+                outR[offset + i] = frame.right[i];
+              }
+              offset += take;
+              if (take < frame.length) {
+                frame.left = frame.left.slice(take);
+                frame.right = frame.right.slice(take);
+                frame.length -= take;
+              } else {
+                state.streamQueue.shift();
+              }
+            }
+          };
+          state.eqFilters = [];
+          let node = state.scriptNode;
+          for (let i = 0; i < 10; i++) {
+            const f = state.audioCtx.createBiquadFilter();
+            if (i === 9) {
+              f.type = 'highshelf';
+              const piv = Math.min(DJ_STREAM_HIGHSHELF_HZ, state.audioCtx.sampleRate * DJ_STREAM_HIGHSHELF_FMAX_FRAC_SR);
+              f.frequency.value = piv;
+              f.Q.value = 1;
+            } else {
+              f.type = 'peaking';
+              f.frequency.value = DJ_EQ_BAND_HZ[i];
+              f.Q.value = 1.2;
+            }
+            f.gain.value = 0;
+            node.connect(f);
+            node = f;
+            state.eqFilters.push(f);
+          }
+          node.connect(state.gainNode);
+          state.gainNode.connect(state.audioCtx.destination);
+          applyDjEq();
+          syncStreamMasterToGain();
+        }
+        if (state.audioCtx.state === 'suspended') await state.audioCtx.resume();
+
+        const format = $('streamFormat').value;
+        const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
+        const url = `${scheme}://${location.host}/ws/stream?format=${encodeURIComponent(format)}`;
+        const ws = new WebSocket(url);
+        ws.binaryType = 'arraybuffer';
+        ws.onopen = () => {
+          state.ws = ws;
+          state.streamConnected = true;
+          setChip('chipStream', 'Stream: connected', 'ok');
+          $('btnStreamToggle').textContent = 'Disconnect Stream';
+          $('streamInfo').textContent = `Connected to ${format} PCM stream.`;
+          logMessage(`Stream connected (${format})`);
+          syncStreamMasterToGain();
+        };
+        ws.onmessage = (event) => {
+          if (typeof event.data === 'string') {
+            try {
+              const msg = JSON.parse(event.data);
+              if (msg.sr) state.streamMeta = msg;
+              $('streamInfo').textContent = `Stream ${msg.format || format}, ${msg.sr || '?'} Hz, ${msg.channels || 2} ch`;
+            } catch (_) {}
+            return;
+          }
+          const buffer = event.data;
+          const meta = state.streamMeta || { format, channels: 2 };
+          let left, right;
+          if ((meta.format || format) === 'f32') {
+            const src = new Float32Array(buffer);
+            const frames = Math.floor(src.length / 2);
+            left = new Float32Array(frames);
+            right = new Float32Array(frames);
+            for (let i = 0, j = 0; i < frames; i++, j += 2) { left[i] = src[j] || 0; right[i] = src[j + 1] || 0; }
+          } else {
+            const src = new Int16Array(buffer);
+            const frames = Math.floor(src.length / 2);
+            left = new Float32Array(frames);
+            right = new Float32Array(frames);
+            for (let i = 0, j = 0; i < frames; i++, j += 2) { left[i] = (src[j] || 0) / 32768; right[i] = (src[j + 1] || 0) / 32768; }
+          }
+          state.streamQueue.push({ left, right, length: left.length });
+          if (state.streamQueue.length > state.maxQueueFrames) state.streamQueue.splice(0, state.streamQueue.length - state.maxQueueFrames);
+        };
+        ws.onerror = () => {
+          $('streamInfo').textContent = 'WebSocket stream error.';
+        };
+        ws.onclose = () => {
+          state.streamConnected = false;
+          state.ws = null;
+          $('btnStreamToggle').textContent = 'Connect Stream';
+          setChip('chipStream', 'Stream: disconnected', 'warn');
+          $('streamInfo').textContent = 'Stream disconnected.';
+        };
+      } catch (err) {
+        alert(`Stream connection failed: ${err.message}`);
+      }
+    }
+
+    function disconnectStream() {
+      if (state.ws) state.ws.close();
+      state.ws = null;
+      state.streamConnected = false;
+      state.streamQueue = [];
+      $('btnStreamToggle').textContent = 'Connect Stream';
+      setChip('chipStream', 'Stream: disconnected', 'warn');
+      $('streamInfo').textContent = 'Stream disconnected.';
+    }
+
+    function bindDeckActions(deck) {
+      const modeName = `fileMode${deck}`;
+      document.querySelectorAll(`input[name="${modeName}"]`).forEach((r) => {
+        r.addEventListener('change', () => {
+          syncDeckFileInputsVisibility(deck);
+          clearDeckFileInputs(deck);
+        });
+      });
+      syncDeckFileInputsVisibility(deck);
+      $(`file${deck}_one`).addEventListener('change', () => uploadDeckFilePicker(deck));
+      $(`file${deck}_multi`).addEventListener('change', () => uploadDeckFilePicker(deck));
+      $(`folder${deck}`).addEventListener('change', () => uploadFolder(deck));
+      $(`gain${deck}`).addEventListener('input', async (e) => {
+        $(`gain${deck}Label`).textContent = fmt(e.target.value);
+        try { await post(`/gain/${deck}`, { gain: e.target.value }); } catch (_) {}
+      });
+      $(`playlist${deck}`).addEventListener('change', async (e) => {
+        try { await post(`/playlist_select/${deck}`, { index: e.target.value }); refreshStatus(true); } catch (err) { alert(err.message); }
+      });
+    }
+
+    async function handleAction(action, deck) {
+      try {
+        switch (action) {
+          case 'play': await post(`/play/${deck}`); break;
+          case 'stop': await post(`/stop/${deck}`); break;
+          case 'mute': await post(`/mute/${deck}`); break;
+          case 'sync': await post(`/sync/${deck}`); break;
+          case 'unsync': await post(`/unsync/${deck}`); break;
+          case 'align': await post(`/align/${deck}`); break;
+          case 'quantize': await post(`/quantize/${deck}`); break;
+          case 'reload-deck': await post(`/reload_deck/${deck}`); break;
+          case 'prev-track': await post(`/playlist_prev/${deck}`); break;
+          case 'next-track': await post(`/playlist_next/${deck}`); break;
+          case 'sort-bpm': {
+            const sortData = await post(`/playlist_sort_bpm/${deck}`);
+            if (sortData.sorted) logMessage(`Deck ${deck}: ${(sortData.paths || []).length} tracks sorted by BPM ↑`);
+            else logMessage(`Deck ${deck}: playlist unchanged (need 2+ tracks to sort)`);
+            break;
+          }
+          case 'seek-button': await post(`/seek/${deck}`, { seconds: $(`seek${deck}`).value || 0 }); break;
+          case 'loop': await post(`/loop_beats/${deck}`, { beats: $(`loop${deck}`).value }); break;
+          case 'roll': await post(`/roll_beats/${deck}`, { beats: $(`roll${deck}`).value }); break;
+          case 'loop-off': await post(`/loop_off/${deck}`); break;
+          case 'roll-off': await post(`/roll_off/${deck}`); break;
+        }
+        const needWave = ['reload-deck', 'prev-track', 'next-track', 'sort-bpm'].includes(action);
+        refreshStatus(needWave);
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    function openModalOverlay(overlayId) {
+      const el = document.getElementById(overlayId);
+      if (!el) return;
+      el.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModalOverlay(overlayId) {
+      if (overlayId === 'modalDownloaderOverlay') {
+        const fr = $('downloaderEmbedFrame');
+        if (fr) fr.src = 'about:blank';
+      }
+      if (overlayId === 'modalTrimOverlay') {
+        const tfr = $('trimEmbedFrame');
+        if (tfr) tfr.src = 'about:blank';
+      }
+      const el = document.getElementById(overlayId);
+      if (!el) return;
+      el.classList.remove('open');
+      if (!document.querySelector('.modal-overlay.open')) {
+        document.body.style.overflow = '';
+      }
+    }
+
+    function bindModalOverlays() {
+      const jsonId = 'modalJsonOverlay';
+      const logId = 'modalLogOverlay';
+      const lyricsId = 'modalLyricsDlOverlay';
+      const dlId = 'modalDownloaderOverlay';
+      const trimId = 'modalTrimOverlay';
+      const eqId = 'modalEqOverlay';
+      const jinglesId = 'modalJinglesOverlay';
+      const libraryId = 'modalLibraryOverlay';
+      $('btnOpenModalJson').addEventListener('click', () => openModalOverlay(jsonId));
+      $('btnOpenModalLog').addEventListener('click', () => openModalOverlay(logId));
+      $('btnOpenModalLyricsDl')?.addEventListener('click', () => {
+        openModalOverlay(lyricsId);
+        syncLyricsDlPanel().catch(() => {});
+      });
+      $('btnOpenModalDownloader')?.addEventListener('click', () => {
+        openModalOverlay(dlId);
+        const fr = $('downloaderEmbedFrame');
+        if (fr) {
+          fr.src = `/downloader_embed?v=3&t=${Date.now()}`;
+        }
+      });
+      $('btnOpenModalTrim')?.addEventListener('click', () => {
+        openModalOverlay(trimId);
+        const tfr = $('trimEmbedFrame');
+        if (tfr) {
+          tfr.src = `/trim_embed?v=1&t=${Date.now()}`;
+        }
+      });
+      const openEqPanel = () => openModalOverlay(eqId);
+      $('btnOpenModalEq')?.addEventListener('click', openEqPanel);
+      $('btnOpenModalEqInline')?.addEventListener('click', openEqPanel);
+      const openJinglesPanel = () => openModalOverlay(jinglesId);
+      $('btnOpenModalJingles')?.addEventListener('click', openJinglesPanel);
+      $('btnOpenModalJinglesInline')?.addEventListener('click', openJinglesPanel);
+      const openLibraryPanel = () => {
+        openModalOverlay(libraryId);
+        refreshLibrary().catch(() => {});
+      };
+      $('btnOpenModalLibrary')?.addEventListener('click', openLibraryPanel);
+      $('btnOpenModalLibraryInline')?.addEventListener('click', openLibraryPanel);
+      document.querySelectorAll('[data-close-modal]').forEach((btn) => {
+        btn.addEventListener('click', () => closeModalOverlay(btn.getAttribute('data-close-modal')));
+      });
+      [jsonId, logId, lyricsId, dlId, trimId, eqId, jinglesId, libraryId].forEach((id) => {
+        const ov = document.getElementById(id);
+        if (!ov) return;
+        ov.addEventListener('click', (e) => {
+          if (e.target === ov) closeModalOverlay(id);
+        });
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        closeModalOverlay(jsonId);
+        closeModalOverlay(logId);
+        closeModalOverlay(lyricsId);
+        closeModalOverlay(dlId);
+        closeModalOverlay(trimId);
+        closeModalOverlay(eqId);
+        closeModalOverlay(jinglesId);
+        closeModalOverlay(libraryId);
+      });
+    }
+
+    function bindGlobalEvents() {
+      document.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => handleAction(btn.dataset.action, btn.dataset.deck));
+      });
+
+      $('btnStartEngine').addEventListener('click', async () => { try { await post('/init_engine'); refreshStatus(true); } catch (err) { alert(err.message); } });
+      $('btnStopEngine').addEventListener('click', async () => { try { await post('/stop_engine'); disconnectStream(); refreshStatus(true); } catch (err) { alert(err.message); } });
+      $('btnAutoOn').addEventListener('click', async () => { try { await post('/auto_on'); refreshStatus(false); } catch (err) { alert(err.message); } });
+      $('btnAutoOff').addEventListener('click', async () => { try { await post('/auto_off'); refreshStatus(false); } catch (err) { alert(err.message); } });
+      $('btnRefresh').addEventListener('click', () => refreshStatus(true));
+      $('btnLibraryRefresh').addEventListener('click', refreshLibrary);
+      $('btnLyricsDlFetchSelected')?.addEventListener('click', () => {
+        const sel = $('lyricsDlSelect');
+        const rp = sel && sel.value;
+        if (!rp) {
+          alert('Choose a file in the Lyrics downloader list (refresh the library if it is empty).');
+          return;
+        }
+        fetchLyricsLrcForRow(rp, { usePanelQuery: true }).catch((e) => alert(e.message));
+      });
+      $('btnLyricsDlFetchDeckA')?.addEventListener('click', () => {
+        fetchLyricsLrcForDeck('A').catch((e) => alert(e.message));
+      });
+      $('btnLyricsDlFetchDeckB')?.addEventListener('click', () => {
+        fetchLyricsLrcForDeck('B').catch((e) => alert(e.message));
+      });
+      $('btnLyricsDlFetchAll')?.addEventListener('click', () => {
+        fetchLyricsLrcForAllRows().catch((e) => alert(e.message));
+      });
+      $('btnSortBpmAll').addEventListener('click', async () => {
+        try {
+          await post('/playlist_sort_bpm_all');
+          logMessage('Decks A & B: playlists sorted by BPM ↑');
+          refreshStatus(true);
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+      $('btnCopyLog').addEventListener('click', async () => {
+        await navigator.clipboard.writeText($('logText').textContent || '');
+        logMessage('Log copied to clipboard');
+      });
+
+      $('crossfader').addEventListener('input', async (e) => {
+        $('crossfaderLabel').textContent = fmt(e.target.value);
+        try { await post('/crossfader', { x: e.target.value }); } catch (_) {}
+      });
+      $('masterGain').addEventListener('input', async (e) => {
+        $('masterGainLabel').textContent = fmt(e.target.value);
+        try { await post('/master_gain', { g: e.target.value }); } catch (_) {}
+      });
+
+      $('streamMasterVol')?.addEventListener('input', () => {
+        if (state.audioCtx && state.audioCtx.state === 'suspended') state.audioCtx.resume().catch(() => {});
+        syncStreamMasterToGain();
+      });
+
+      $('btnDjEqFlat')?.addEventListener('click', () => {
+        for (let i = 0; i < 10; i++) {
+          const sl = $(`dj-eq-${i}`);
+          if (sl) sl.value = '0';
+        }
+        if (state.audioCtx && state.audioCtx.state === 'suspended') state.audioCtx.resume().catch(() => {});
+        applyDjEq();
+        updateDjEqLabels();
+      });
+
+      $('btnEngEqFlat')?.addEventListener('click', async () => {
+        for (let i = 0; i < 10; i++) {
+          const sl = $(`eng-eq-${i}`);
+          if (sl) sl.value = '0';
+        }
+        updateEngEqLabels();
+        if (engEqPostTimer) clearTimeout(engEqPostTimer);
+        engEqPostTimer = null;
+        try {
+          await postJson('/engine_eq', { bands: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] });
+        } catch (_) {}
+      });
+
+      $('btnDropSync').addEventListener('click', async () => {
+        try { await post(`/drop_sync/${$('dropIncoming').value}`); refreshStatus(false); } catch (err) { alert(err.message); }
+      });
+      $('btnAlignManual').addEventListener('click', async () => {
+        try { await post('/align_manual', { slave: $('alignSlave').value, master: $('alignMaster').value }); refreshStatus(false); } catch (err) { alert(err.message); }
+      });
+      $('btnDropManual').addEventListener('click', async () => {
+        try { await post('/drop_manual', { incoming: $('dropManualIn').value, outgoing: $('dropManualOut').value }); refreshStatus(false); } catch (err) { alert(err.message); }
+      });
+
+      document.querySelectorAll('[data-tj-browse]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const si = parseInt(btn.getAttribute('data-tj-browse'), 10);
+          state.tjUploadSlot = Number.isFinite(si) ? clamp(si, 0, 3) : 0;
+          $('transitionJingleFile')?.click();
+        });
+      });
+      document.querySelectorAll('[data-tj-play]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const si = parseInt(btn.getAttribute('data-tj-play'), 10);
+          if (!Number.isFinite(si)) return;
+          try {
+            await post('/transition_jingle/play', { slot: String(si) });
+            logMessage(`Jingle slot ${si + 1} playing`);
+            refreshStatus(false);
+          } catch (err) {
+            alert(err.message);
+          }
+        });
+      });
+      $('transitionJingleFile')?.addEventListener('change', async () => {
+        const inp = $('transitionJingleFile');
+        if (!inp || !inp.files?.length) return;
+        const fd = new FormData();
+        fd.append('file', inp.files[0]);
+        fd.append('slot', String(state.tjUploadSlot));
+        try {
+          await api('/transition_jingle/upload', { method: 'POST', body: fd });
+          inp.value = '';
+          await refreshStatus(false);
+        } catch (err) { alert(err.message); }
+      });
+
+      function shuffleInPlace(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+      }
+      $('btnTransitionJingleFolder')?.addEventListener('click', () => {
+        $('transitionJingleFolder')?.click();
+      });
+      $('transitionJingleFolder')?.addEventListener('change', async () => {
+        const inp = $('transitionJingleFolder');
+        if (!inp?.files?.length) return;
+        const audioRe = /\.(mp3|wav|flac|ogg|m4a|aac)$/i;
+        let list = Array.from(inp.files).filter((f) => audioRe.test(f.name));
+        if (!list.length) {
+          alert('No supported audio files in that folder (mp3, wav, flac, ogg, m4a, aac).');
+          inp.value = '';
+          return;
+        }
+        const MAX_SEND = 96;
+        if (list.length > MAX_SEND) {
+          shuffleInPlace(list);
+          list = list.slice(0, MAX_SEND);
+        }
+        const fd = new FormData();
+        for (const f of list) fd.append('files', f, f.name);
+        try {
+          const data = await api('/transition_jingle/upload_folder', { method: 'POST', body: fd });
+          inp.value = '';
+          const n = data && typeof data.loaded_count === 'number' ? data.loaded_count : '';
+          if (n !== '') logMessage(`Jingle folder: ${n} file(s) loaded into slots`);
+          await refreshStatus(false);
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+      document.querySelectorAll('[data-tj-clear-slot]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const si = parseInt(btn.getAttribute('data-tj-clear-slot'), 10);
+          if (!Number.isFinite(si)) return;
+          try {
+            await api(`/transition_jingle/clear?slot=${si}`, { method: 'POST' });
+            await refreshStatus(false);
+          } catch (err) { alert(err.message); }
+        });
+      });
+      $('btnTransitionJingleClearAll')?.addEventListener('click', async () => {
+        try {
+          await api('/transition_jingle/clear', { method: 'POST' });
+          await refreshStatus(false);
+        } catch (err) { alert(err.message); }
+      });
+      async function pushTransitionJingleConfig() {
+        try {
+          await postJson('/transition_jingle/config', {
+            enabled: !!$('transitionJingleEnabled')?.checked,
+            gain: parseFloat($('transitionJingleGain')?.value || '0.65'),
+            order: $('transitionJingleOrder')?.value === 'random' ? 'random' : 'sequential',
+          });
+          await refreshStatus(false);
+        } catch (err) { alert(err.message); }
+      }
+      $('transitionJingleOrder')?.addEventListener('change', pushTransitionJingleConfig);
+      $('transitionJingleEnabled')?.addEventListener('change', pushTransitionJingleConfig);
+      $('transitionJingleGain')?.addEventListener('input', () => {
+        const g = parseFloat($('transitionJingleGain')?.value || '0');
+        const gl = $('transitionJingleGainLabel');
+        if (gl) gl.textContent = fmt(g);
+      });
+      $('transitionJingleGain')?.addEventListener('change', pushTransitionJingleConfig);
+
+      $('btnRecStart').addEventListener('click', async () => {
+        try {
+          const path = $('recordPath').value.trim();
+          const data = await post('/record/start', path ? { path } : null);
+          $('recordResult').textContent = data.path || 'Recording started';
+          refreshStatus(false);
+        } catch (err) { alert(err.message); }
+      });
+      $('btnRecStop').addEventListener('click', async () => {
+        try {
+          const data = await post('/record/stop');
+          $('recordResult').textContent = data.path || data.message || 'Recording stopped';
+          refreshStatus(false);
+        } catch (err) { alert(err.message); }
+      });
+
+      $('btnStreamToggle').addEventListener('click', async () => {
+        if (state.streamConnected) disconnectStream();
+        else await connectStream();
+      });
+
+      window.addEventListener('resize', () => {
+        drawWave('waveA', state.status?.deck_a, '#ff5d9b');
+        drawWave('waveB', state.status?.deck_b, '#00d7ff');
+      });
+    }
+
+    function tip(el, text) {
+      if (el && text) el.title = text;
+    }
+
+    function initTooltips() {
+      const deckTips = {
+        'reload-deck': 'Reloads the same audio file from disk (use after you edited/replaced the file outside the app). Engine should be on for audible result. Does not change playlist order.',
+        play: 'Starts or resumes this deck. Prerequisite: click “Start Engine” in the mixer first, and this deck must have a track loaded. If nothing plays, check the Engine chip is green and both decks were loaded before starting.',
+        stop: 'Stops playback on this deck (playhead stays where it stopped). You can press Play again to continue from the same position unless you load another track.',
+        mute: 'Toggles silence for this deck only. The other deck and master are unchanged. Use when you want one deck silent in the mix.',
+        sync: 'Locks this deck’s tempo to the other deck so both play in time together. Useful for beatmixing. Load tracks on both decks and start the engine first.',
+        unsync: 'Releases tempo sync so this deck returns to its natural BPM (from the file/analysis). Use when you want independent speeds again.',
+        align: 'Snaps this deck’s beats to line up with the other deck for tighter mixing. Best used when both tracks are playing and already roughly the same tempo.',
+        quantize: 'Turns quantized jumps on or off so certain actions snap to the beat grid when the engine supports it.',
+        'prev-track': 'Selects the previous entry in this deck’s playlist (see the list box). If you only have one track, nothing changes. Engine on: the deck reloads the newly selected file.',
+        'next-track': 'Selects the next playlist entry for this deck. Same behavior as Prev: requires multiple files in the playlist to have an effect.',
+        'sort-bpm': 'Reorders this deck’s entire playlist from slowest BPM to fastest. Tracks without a known BPM move to the bottom. Your currently playing file stays selected when possible. First run may take time while BPM is detected.',
+        'seek-button': 'Type a time in seconds in the box next to it, then click Seek. The playhead jumps to that position on this deck (engine must be running and a track loaded).',
+        loop: 'Choose how many beats (1–32) in the dropdown, then click Set to enable a loop region on this deck. Use Loop Off to clear it.',
+        roll: 'Choose roll length in beats, then Set for a short repeating “roll” effect. Roll Off turns it off.',
+        'loop-off': 'Turns off the active loop on this deck so playback continues normally through the full track.',
+        'roll-off': 'Turns off the roll effect on this deck.',
+      };
+
+      document.querySelectorAll('[data-action][data-deck]').forEach((btn) => {
+        const a = btn.dataset.action;
+        const d = btn.dataset.deck;
+        const base = deckTips[a];
+        if (base) btn.title = `Deck ${d} — ${base}`;
+      });
+
+      const byId = {
+        btnSamselWebDesktop: 'Desktop app: opens the native SAMSEL Web window (Player, Lyrics, Trim, EQ, Downloader). Same as the menu item SAMSEL Web → Open. In a normal browser tab this control stays hidden.',
+        btnOpenModalJson: 'Opens a popup (dimmed background) with the full JSON status from the server. Use it to see exact values—BPM, file paths, flags—for troubleshooting or integrations. Inside the popup, the “Updated” line shows when data last refreshed.',
+        btnOpenModalLog: 'Opens a popup with the full engine log (scrollable). New lines appear when you use controls; use this to see what the server did after each action.',
+        btnOpenModalLyricsDl:
+          'Opens the Lyrics downloader popup: pick a library file (or Deck A/B if under uploads/), optional search override, fetch synced .lrc via syncedlyrics (lrclib). Same stack as SAMSEL Web Downloader. Click outside the panel or Close or press Escape to dismiss.',
+        btnOpenModalDownloader:
+          'Opens SAMSEL Web Downloader v2 in an embedded page: source types (single/search, playlist, CSV, folder scan), output folder and format, processing checkboxes, worker start/stop, job queue, live log. Uses /api/automix on this engine. Close or Esc unloads the frame (stops polling).',
+        btnOpenModalTrim:
+          'Opens SAMSEL Web Silence trim: playlist (files/folder, drag-drop, BPM sort), quick trim of the selected row to MP3, batch auto-detect or fixed trim, MP3 bitrate, optional output folder (Chrome/Edge), trim log. Runs in your browser (Web Audio + lamejs). Close or Esc unloads the frame.',
+        btnOpenModalEq:
+          'Opens the EQ panel: engine 10-band master EQ (posts to server), browser stream preview EQ + stream Master, Connect Stream (i16/f32). Same behavior as when these controls lived in the mixer.',
+        btnOpenModalEqInline: 'Same as the top-bar EQ button — opens the Engine & stream EQ panel.',
+        btnOpenModalJingles:
+          'Opens the Transition jingles panel: four slots (load / play / clear), folder fill, sequential or random order, play at transitions, jingle gain vs mix.',
+        btnOpenModalJinglesInline: 'Same as the top-bar Jingles button — opens the Transition jingles panel.',
+        btnOpenModalLibrary:
+          'Opens the uploads library: scan uploads/, metadata table, target deck, refresh, click a row to load on A or B, per-row .lrc fetch when syncedlyrics is installed.',
+        btnOpenModalLibraryInline: 'Same as the top-bar Library button — opens the Loaded files (uploads) panel.',
+        btnStartEngine: 'STEP 1: Load a track on Deck A and Deck B (file or folder upload). STEP 2: Click here. The engine starts real-time audio. The Engine chip turns green. If you get an error, confirm both decks show a track name and try again.',
+        btnStopEngine: 'Stops the audio engine and releases your sound device. Playback stops on both decks. You can still change playlists and files; click Start Engine again when ready to play.',
+        btnAutoOn: 'Turns on Auto DJ so the app can automatically move between tracks/decks according to the built-in logic. Turn off with Auto DJ Off if you want full manual control.',
+        btnAutoOff: 'Disables Auto DJ; you drive all transitions manually (crossfader, play/stop, drop tools).',
+        btnSortBpmAll: 'Runs “sort by BPM ascending” on BOTH Deck A and Deck B playlists at once. Good after loading big folders. Unknown-BPM files sort last on each deck.',
+        btnDropSync: 'Automated transition helper. Choose which deck is “incoming” in the dropdown, then Run. Have both decks loaded and engine running for best results. Check the log popup if behavior is unclear.',
+        btnAlignManual: 'Pick which deck should follow (Slave) and which is the reference (Master), then Align. Use when you want beats lined up without full sync lock.',
+        btnDropManual: 'Pick Incoming and Outgoing decks, then Drop to trigger the manual drop transition between them. Engine must be running.',
+        transitionJingleOrder: 'Sequential: each programmed crossfade uses the next loaded slot (1, then 2, …), wrapping. Random: picks uniformly among slots that have a file.',
+        btnTransitionJingleFolder: 'Choose a folder of jingle audio: the server picks up to four files at random and fills slots 1–4 (replaces previous jingles). Use Random play order for variety across transitions. Chromium / Edge / WebView2; other browsers may vary.',
+        btnTransitionJingleClearAll: 'Removes all four jingle slots from disk and from the engine.',
+        transitionJingleEnabled: 'When on, each programmed crossfade (Drop Sync, Manual Drop, Auto DJ) mixes in your jingle once from the start. Moving the crossfader by hand does not trigger it.',
+        transitionJingleGain: 'Jingle loudness vs the deck mix during those automated crossfades (slider up to 2.0).',
+        btnStreamToggle: 'First click: connects this browser to the live PCM stream over WebSocket (for quiet monitoring through your device speakers/headphones). Second click: disconnects. You may need to tap once on mobile to unlock audio. Choose i16 format for widest phone compatibility.',
+        btnEngEqFlat: 'Sets all engine master EQ bands to 0 dB and sends the change to the server. Applies to live engine output (and stream/recording that tap the same mix).',
+        streamMasterVol: 'Adjust playback volume for this browser stream only (0 to 100%, linear gain after EQ). Same scale as Master in SAMSEL Web; separate from engine Master Gain above.',
+        btnRecStart: 'Records the mixed output to a WAV file. Leave the path empty to auto-save under /recordings with a timestamp, or type a full path ending in .wav. Engine should be running. Click Stop Recording when finished.',
+        btnRecStop: 'Ends recording and closes the WAV file. The log and status show where the file was saved.',
+        btnRefresh: 'Pulls a full /status including waveforms. Background refresh is lightweight (no waveform JSON) so controls stay snappy; use this if the UI looks stale.',
+        btnLibraryRefresh: 'Scans the server’s uploads folder again and rebuilds the library table (metadata, BPM columns). Use after uploading files from the deck pickers or from another session.',
+        btnLyricsDlFetchSelected:
+          'Runs syncedlyrics for the file chosen in the dropdown; saves SameName.lrc under uploads/ next to that track. If “Search override” is filled, that string is sent to syncedlyrics instead of tag/filename.',
+        btnLyricsDlFetchDeckA:
+          'Fetches .lrc for whatever is loaded on Deck A, only if that file’s path is under uploads/ (normal when you loaded from the library). Optional search override applies.',
+        btnLyricsDlFetchDeckB: 'Same as Deck A: fetch .lrc for Deck B’s current file when it lives under uploads/.',
+        btnLyricsDlFetchAll:
+          'Batch: every row currently shown in the library table. Respects “Overwrite existing .lrc”. Same syncedlyrics / lrclib stack as SAMSEL Web Downloader.',
+        btnCopyLog: 'Copies all text currently shown in the Engine log popup to your clipboard so you can paste it into email or a ticket.',
+      };
+      Object.entries(byId).forEach(([id, t]) => tip($(id), t));
+
+      document.querySelectorAll('[data-close-modal]').forEach((b) => {
+        b.title = 'Closes this popup window. Your app keeps running; you can reopen Structured status or Engine log from the top bar anytime.';
+      });
+
+      document.querySelectorAll('[data-tj-play]').forEach((b) => {
+        tip(b, 'Play this slot’s jingle from the start over the live master mix. Start the engine first; level follows the Jingle level slider. Clicking another Play replaces the current jingle.');
+      });
+
+      tip($('chipEngine'), 'Shows whether the audio engine is running (green) or stopped (amber/red). Flow: load A + B → Start Engine → Play on each deck. Stop Engine turns this off.');
+      tip($('chipStream'), 'Shows if this browser tab is connected to the optional WebSocket preview stream (not the same as your main PA speakers unless you route it).');
+      tip($('chipAuto'), 'Shows whether Auto DJ automation is on or off.');
+      tip($('chipRec'), 'Shows whether a mix recording to WAV is currently in progress.');
+
+      tip($('crossfader'), 'Drag left for more Deck A, right for more Deck B. Center = both audible. Works once the engine is running. This is the main blend control for your set.');
+      tip($('masterGain'), 'Boosts or cuts overall level after the crossfader. Start near 1.0; lower if you clip, raise if too quiet. Your OS volume still applies on top.');
+      tip($('streamFormat'), 'f32 = higher quality in capable browsers; i16 = safer on phones and slower networks. Change before connecting the stream; reconnect after switching.');
+      tip($('recordPath'), 'Optional: type a full Windows path for your WAV (e.g. D:\\Mixes\\show.wav). Leave blank and the server picks a dated file under /recordings. Path must end with .wav or it will be added for you.');
+      tip($('dropIncoming'), 'For Drop Sync: choose which deck is bringing in the new track for the automated transition.');
+      tip($('alignSlave'), 'The deck that will be adjusted to match the other deck’s timing.');
+      tip($('alignMaster'), 'The deck that stays as the timing reference; the slave aligns to this one.');
+      tip($('dropManualIn'), 'In Manual Drop: the deck you are bringing into the mix.');
+      tip($('dropManualOut'), 'In Manual Drop: the deck you are fading out or replacing.');
+      tip($('libraryTargetDeck'), 'Choose A or B before you click a row in the library table. That deck will load the clicked file and its playlist becomes that single track until you load something else.');
+      tip($('playlistA'), 'Lists every track on Deck A in play order. Numbers show playlist index; each line shows BPM when known and filename. Click a line to jump to that track (engine reloads selection). Scroll inside the box when there are many files. “Sort playlist · BPM ↑” reorders this list.');
+      tip($('playlistB'), 'Same as Deck A playlist: order = playback order, BPM when known, click to select track, scroll for long lists, use Sort BPM on this deck to reorder by tempo.');
+      tip($('waveA'), 'Deck A waveform: mouse wheel zooms around the cursor; drag horizontally to pan when zoomed; double-click resets zoom. Left click seeks; right click sets cue/loop target. Engine and loaded track required.');
+      tip($('waveB'), 'Deck B waveform: same as A — wheel zoom, drag pan when zoomed, double-click reset zoom, left seek, right cue target.');
+      tip($('deckAFileBrowse'), 'Deck A: pick One track or Multiple tracks first. Two separate file controls are used so WebView can open a real multi-select dialog — after “Multiple tracks”, only the multi browse line is shown. Formats: mp3, wav, flac, ogg, m4a, aac.');
+      tip($('folderA'), 'Folder picker: every supported audio file in that folder (and subfolders, browser-dependent) loads onto Deck A; playlist sorted by BPM ↑. Use “Load file(s)” instead if you only want specific files from one folder.');
+      tip($('deckBFileBrowse'), 'Deck B: same as A — “Multiple tracks” shows a dedicated input with the multiple attribute set in HTML (required for Edge/WebView2).');
+      tip($('folderB'), 'Whole-folder load for Deck B with BPM sort. Prefer “Multiple tracks” + file picker when you do not want every file in the directory.');
+      tip($('gainA'), 'Per-deck volume for A before the crossfader. 1.0 is unity; drag down if A is too hot in the mix.');
+      tip($('gainB'), 'Per-deck volume for B before the crossfader.');
+      tip($('seekA'), 'Enter seconds from the start of the track (decimals allowed), then press the Seek button beside it. Playback jumps on Deck A when the engine is running.');
+      tip($('seekB'), 'Same as Deck A: type seconds, then Seek, for Deck B.');
+      tip($('loopA'), 'Choose loop length in beats, then press Set on the Loop row. Smaller numbers = shorter loops. Use Loop Off to disable.');
+      tip($('loopB'), 'Loop length in beats for Deck B before pressing Set.');
+      tip($('rollA'), 'Roll length in beats for Deck A before pressing Set on the Roll row. Roll Off clears the effect.');
+      tip($('rollB'), 'Roll length in beats for Deck B.');
+      tip($('statusText'), 'Human-readable summary line from the server (engine state, hints). For raw data use “Structured status” in the top bar.');
+      tip($('libraryHint'), 'Explains how many files were found and how to use the table. If it says loading failed, check your connection and click Refresh list.');
+      tip(
+        $('lyricsDlHeading'),
+        'Popup title for the lyrics downloader. Server runs syncedlyrics; choose a library file or deck, optional search override, and .lrc is written beside the audio under uploads/.',
+      );
+      tip($('lyricsDlSelect'), 'Lists the same files as the library table (after Refresh list). Choosing a row in the library also updates this dropdown.');
+      tip($('lyricsDlQueryOverride'), 'Optional. When set, “Fetch for selection” and Deck A/B use this exact search string for syncedlyrics instead of Artist - Title from tags or the cleaned filename.');
+      tip($('lyricsDlOverwrite'), 'When checked, an existing .lrc next to the track is replaced. When off, existing sidecars are skipped.');
+      tip(
+        $('lyricsDlAlert'),
+        'Shown when the lyrics module or syncedlyrics is missing, or when status could not be read. Fix on the PC running the engine: pip install syncedlyrics; ensure samsel_web/automix_core.py is present.',
+      );
+      tip($('lyricsDlLog'), 'Short local log of fetch results from this panel and from batch / table actions. Newest lines appear at the top.');
+      tip($('jsonStatus'), 'Pretty-printed JSON mirror of the last status payload: decks, playlists, mixer values, etc. Easiest to read inside the Structured status popup from the top bar.');
+      tip($('logText'), 'Chronological engine messages (newest often at top after actions). Open “Engine log” from the top bar for a large scrollable view and Copy log.');
+      tip($('lastUpdate'), 'Local clock time when the UI last successfully pulled /status. If this freezes, check the Engine chip or click Refresh Now in the mixer.');
+      tip($('streamInfo'), 'Shows stream format, sample rate, and channel count after you connect. On phones, tap the page once if audio is blocked; prefer i16 in the dropdown above.');
+      tip(
+        $('recordResult'),
+        'After recording: this line shows the saved .wav path or a server message. When the file is under the engine recordings folder, download it from the same host at /recordings/<filename> (this app mounts the /recordings URL).',
+      );
+    }
+
+    function initSamselWebDesktopButton() {
+      const btn = $('btnSamselWebDesktop');
+      if (!btn) return;
+      function tryBind() {
+        const api = window.pywebview && window.pywebview.api;
+        const fn =
+          api &&
+          (typeof api.open_samsel_web_popup === 'function'
+            ? api.open_samsel_web_popup
+            : typeof api.openSamselWebPopup === 'function'
+              ? api.openSamselWebPopup
+              : null);
+        if (!fn) return false;
+        btn.classList.add('is-visible');
+        if (btn.dataset.samselBound === '1') return true;
+        btn.dataset.samselBound = '1';
+        btn.addEventListener('click', () => {
+          try {
+            const r = fn();
+            if (r && typeof r.then === 'function') r.catch(() => {});
+          } catch (e) {
+            console.warn('SAMSEL Web:', e);
+          }
+        });
+        return true;
+      }
+      if (tryBind()) return;
+      let n = 0;
+      const id = setInterval(() => {
+        if (tryBind() || ++n > 60) clearInterval(id);
+      }, 100);
+    }
+
+    async function init() {
+      window.addEventListener('mousemove', onWaveMouseMove);
+      window.addEventListener('mouseup', onWaveMouseUp);
+      bindWaveform('waveA', 'A');
+      bindWaveform('waveB', 'B');
+      bindDeckActions('A');
+      bindDeckActions('B');
+      bindModalOverlays();
+      bindGlobalEvents();
+      buildDjEqSliders();
+      buildEngEqSliders();
+      initTooltips();
+      initSamselWebDesktopButton();
+      await refreshStatus(true);
+      await refreshLibrary();
+      state.pollTimer = setInterval(() => refreshStatus(false), 1000);
+    }
+
+    init();
+  </script>
+  <script src="/static/js/camo-buttons.js?v=3" defer></script>
+</body>
+</html>

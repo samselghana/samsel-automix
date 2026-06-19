@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# Secrets
+.env
+.env.*
+
+!.env.example
+
+# Databases
+*.db
+
+# Logs
+*.log
+
+# Build Files
+dist/
+build/
+
+# Browser Profiles
+.webview_profile/
+
+# Temporary Files
+temp/
+cache/
+
+# Executables
+*.exe
+
+# Media
+*.mp3
+*.wav
+*.flac
+
+# Archives
+*.zip

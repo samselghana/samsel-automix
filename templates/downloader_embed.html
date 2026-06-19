@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en" data-skin="midnight" data-samsel-api-base="" data-automix-standalone="1">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <title>SAMSEL Downloader — Engine</title>
+  <link rel="stylesheet" href="/samsel_web_static/css/skins.css?v=3" />
+  <link rel="stylesheet" href="/samsel_web_static/css/samsel.css?v=3" />
+  <link rel="stylesheet" href="/samsel_web_static/css/camo-btn-stacks.css?v=3" />
+  <link rel="stylesheet" href="/samsel_web_static/css/automix_standalone.css?v=3" />
+</head>
+<body class="automix-standalone-body">
+  <div id="automix-app" class="automix-standalone-wrap camo-ui-root">
+    <header class="am-standalone-header">
+      <div class="am-standalone-brand brand">
+        <div class="spin-logo-wrap" data-tip="brand_logo">
+          <img
+            class="spin-logo"
+            src="/static/logo.ico"
+            alt=""
+            width="36"
+            height="36"
+            decoding="async"
+          />
+        </div>
+        <div>
+          <h1 class="am-standalone-title">Downloader v2</h1>
+          <p class="am-standalone-sub">Same engine as SAMSEL Web — runs on this PC (<code>yt-dlp</code>, <code>syncedlyrics</code>, post-processing). Settings shared with <code>~/.automix_downloader_v2.json</code>.</p>
+        </div>
+      </div>
+    </header>
+
+    <main class="am-standalone-main">
+      <p class="hint am-localhost-hint">
+        <strong>Source</strong> queue + <strong>Output &amp; processing</strong> options + <strong>Live log</strong> below. Use <em>Save settings</em> before adding jobs if you changed the output folder.
+      </p>
+      <p id="am-lan-hint" class="hint am-lan-hint-line"></p>
+      <div id="am-token-row" class="am-lan-token-row card am-standalone-card" style="display: none">
+        <label for="am-token-input" data-tip="am_token">LAN / remote token</label>
+        <input
+          type="password"
+          id="am-token-input"
+          class="automix-text am-token-input"
+          placeholder="Match SAMSEL_AUTOMIX_TOKEN on server"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+        />
+        <button type="button" class="btn small btn-lbl-mint" id="am-token-save">Save on device</button>
+      </div>
+      <p id="am-probe" class="hint am-probe-line"></p>
+
+      <div class="automix-grid automix-standalone-grid">
+        <div class="card automix-col-left am-standalone-card">
+          <h2 class="automix-section-title">Source</h2>
+          <div class="am-source-types">
+            <label class="am-radio"><input type="radio" name="am-st" value="single" checked /> Single / Search</label>
+            <label class="am-radio"><input type="radio" name="am-st" value="playlist" /> Playlist</label>
+            <label class="am-radio"><input type="radio" name="am-st" value="csv" /> CSV (PC path or upload)</label>
+            <label class="am-radio"><input type="radio" name="am-st" value="folder_scan" /> Scan folder</label>
+          </div>
+          <div class="row-inline am-source-row">
+            <input type="text" id="am-source" class="automix-text" placeholder="URL, search query, or server path to .csv / folder" autocomplete="off" />
+            <button type="button" class="btn small btn-lbl-muted" id="am-browse" data-tip="am_browse">Browse</button>
+            <button type="button" class="btn small btn-lbl-mint" id="am-add-job" data-tip="am_add_job">Add to queue</button>
+          </div>
+          <div class="row-inline am-upload-row">
+            <label class="btn-file btn-lbl-cyan small" data-tip="am_upload_csv">
+              Upload CSV to server
+              <input type="file" id="am-csv-file" accept=".csv,text/csv" hidden />
+            </label>
+          </div>
+
+          <h2 class="automix-section-title">Output &amp; processing</h2>
+          <div class="row-inline am-out-row">
+            <label for="am-output-dir">Output folder</label>
+            <input type="text" id="am-output-dir" class="automix-text" placeholder="Server path, e.g. C:\Users\...\Music\Downloads" autocomplete="off" />
+          </div>
+          <div class="am-format-row row-inline">
+            <label for="am-format">Format</label>
+            <select id="am-format" class="inp-sel">
+              <option value="mp3">mp3</option>
+              <option value="wav">wav</option>
+              <option value="m4a">m4a</option>
+              <option value="flac">flac</option>
+            </select>
+            <label for="am-quality">Quality</label>
+            <select id="am-quality" class="inp-sel">
+              <option value="0">0 (best)</option>
+              <option value="2">2</option>
+              <option value="5">5</option>
+              <option value="7">7</option>
+              <option value="9">9</option>
+            </select>
+          </div>
+          <div class="am-check-grid">
+            <label class="chk-inline"><input type="checkbox" id="am-embed-thumb" /> Embed thumbnail</label>
+            <label class="chk-inline"><input type="checkbox" id="am-add-meta" /> Add metadata</label>
+            <label class="chk-inline"><input type="checkbox" id="am-fetch-lrc" /> Fetch .lrc</label>
+            <label class="chk-inline"><input type="checkbox" id="am-embed-lrc" /> Embed USLT + SYLT</label>
+            <label class="chk-inline"><input type="checkbox" id="am-uslt-full" /> USLT: full LRC (Mp3tag)</label>
+            <label class="chk-inline"><input type="checkbox" id="am-detect-bpm" /> Detect BPM</label>
+            <label class="chk-inline"><input type="checkbox" id="am-detect-genre" /> Detect genre</label>
+            <label class="chk-inline"><input type="checkbox" id="am-pl-sub" /> Playlist subfolders</label>
+            <label class="chk-inline"><input type="checkbox" id="am-auto-lib" /> Auto library</label>
+            <label class="chk-inline"><input type="checkbox" id="am-overwrite" /> Overwrite</label>
+          </div>
+          <div class="row-inline am-ff-row">
+            <label for="am-ffmpeg">FFmpeg folder</label>
+            <input type="text" id="am-ffmpeg" class="automix-text" placeholder="Folder with ffmpeg + ffprobe (optional)" autocomplete="off" />
+          </div>
+
+          <h2 class="automix-section-title">Actions &amp; queue</h2>
+          <div class="row-inline am-actions">
+            <button type="button" class="btn small btn-lbl-gold" id="am-worker-start" data-tip="am_worker_start">Start worker</button>
+            <button type="button" class="btn small btn-lbl-rose" id="am-worker-stop" data-tip="am_worker_stop">Stop worker</button>
+            <button type="button" class="btn small btn-lbl-muted" id="am-save-settings" data-tip="am_save">Save settings</button>
+            <button type="button" class="btn small btn-lbl-cyan" id="am-open-out" data-tip="am_open_out">Open output</button>
+          </div>
+          <div class="automix-table-wrap">
+            <table class="automix-jobs" aria-label="Download jobs">
+              <thead>
+                <tr>
+                  <th>Job ID</th>
+                  <th>Type</th>
+                  <th>Source</th>
+                  <th>Status</th>
+                  <th>%</th>
+                  <th>Current</th>
+                  <th>Error</th>
+                </tr>
+              </thead>
+              <tbody id="am-jobs-body"></tbody>
+            </table>
+          </div>
+
+          <h2 class="automix-section-title">Save to this phone</h2>
+          <p class="hint am-save-phone-hint">
+            <strong>All browsers:</strong> <strong>Download all as ZIP</strong> → Share / Save to Files → pick folder (iPhone, Android, etc.). Unzip in Files. <strong>Chrome/Edge:</strong> optional <strong>Choose save folder</strong> for direct writes. Split UI/API: <code>data-samsel-api-base</code> + <code>SAMSEL_CORS_ORIGINS</code>.
+          </p>
+          <div class="row-inline am-out-actions">
+            <button type="button" class="btn small btn-lbl-cyan" id="am-outputs-refresh" data-tip="am_outputs_refresh">Refresh list</button>
+            <button type="button" class="btn small btn-lbl-gold" id="am-outputs-zip" data-tip="am_outputs_zip">Download all as ZIP</button>
+            <button type="button" class="btn small btn-lbl-mint" id="am-save-folder-pick" data-tip="am_save_folder_pick">Choose save folder</button>
+            <button type="button" class="btn small btn-lbl-muted" id="am-save-folder-clear" data-tip="am_save_folder_clear">Clear folder</button>
+          </div>
+          <p id="am-save-folder-status" class="hint am-save-folder-status" aria-live="polite"></p>
+          <div id="am-pending-delivery" class="am-pending-delivery" hidden role="status" aria-live="polite">
+            <p class="hint am-pending-delivery-msg" style="margin: 0 0 10px"></p>
+            <button type="button" class="btn small btn-lbl-mint" id="am-download-pending-btn">
+              Download to this device now
+            </button>
+          </div>
+          <ul id="am-outputs-list" class="am-outputs-list" aria-label="Files available to download"></ul>
+        </div>
+
+        <div class="card automix-col-right am-standalone-card">
+          <h2 class="automix-section-title">Quick tips</h2>
+          <ul class="am-tips">
+            <li><strong>Single / Search:</strong> <code>artist - title</code> (YouTube search)</li>
+            <li><strong>Playlist:</strong> YouTube playlist URL</li>
+            <li><strong>CSV:</strong> PC path or <em>Upload CSV to server</em> — Spotify-style columns or one query per line</li>
+            <li><strong>Scan folder:</strong> server path; lyrics + BPM + genre on existing audio</li>
+            <li><strong>Worker:</strong> starts on load (like desktop). Stop/Start to pause the queue.</li>
+            <li><strong>FFmpeg:</strong> optional folder with <code>ffmpeg</code> + <code>ffprobe</code>; else PATH</li>
+            <li><strong>pip:</strong> <code>yt-dlp</code>, <code>mutagen</code>, <code>syncedlyrics</code>, <code>librosa</code>, <code>numpy</code></li>
+            <li><strong>Phones:</strong> <em>Download all as ZIP</em> → Share / Save to Files (any browser). Chrome: <em>Choose save folder</em>. Live log uses polling.</li>
+          </ul>
+          <div class="am-log-header row-inline">
+            <h2 class="automix-section-title am-log-title">Live log</h2>
+            <span class="am-log-actions">
+              <button type="button" class="btn small btn-lbl-muted" id="am-log-copy" data-tip="am_log_copy">Copy log</button>
+              <button type="button" class="btn small btn-lbl-rose" id="am-log-clear" data-tip="am_log_clear">Clear log</button>
+            </span>
+          </div>
+          <pre id="am-log" class="automix-log" tabindex="0" aria-label="Downloader live log"></pre>
+        </div>
+      </div>
+
+      <div class="automix-footer card am-standalone-card am-standalone-footer">
+        <progress id="am-progress" class="automix-progress" max="100" value="0"></progress>
+        <div class="row-inline am-footer-row">
+          <span id="am-status" class="am-footer-status">—</span>
+          <span id="am-eta" class="hint"></span>
+          <span id="am-worker-pill" class="pill">Worker</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="samsel-tip" role="tooltip" aria-hidden="true" hidden></div>
+  <script src="/samsel_web_static/js/tooltips.js?v=3"></script>
+  <script src="/samsel_web_static/js/camo-buttons.js?v=3" defer></script>
+  <script src="/samsel_web_static/js/automix.js?v=3" defer></script>
+</body>
+</html>

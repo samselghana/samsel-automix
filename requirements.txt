@@ -1,0 +1,13 @@
+
+fastapi
+pywebview>=4.0
+uvicorn[standard]
+jinja2
+python-multipart
+numpy
+scipy
+librosa
+soundfile
+sounddevice
+tinytag>=1.10.0
+syncedlyrics>=1.0.0
