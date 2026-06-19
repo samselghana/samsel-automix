@@ -41,3 +41,13 @@ cache/
 
 # Archives
 *.zip
+
+desktop.ini
+clean-status*.txt
+file-list.txt
+*.db
+*.zip
+*.exe
+
+SAMSEL_ULTIMATE/
+samsel_web/
